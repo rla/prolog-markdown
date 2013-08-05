@@ -4,8 +4,9 @@
 
 :- use_module(library(apply)).
 :- use_module(library(lists)).
-:- use_module(md_dcg).
-:- use_module(md_lex).
+:- use_module(library(md/md_dcg)).
+:- use_module(library(md/md_lex)).
+:- use_module(library(md/md_trim)).
 
 % Parses list of blocks.
 % Blocks are separated by one or more empty lines.
@@ -23,12 +24,12 @@ blocks([Block|Blocks]) -->
     blocks(Blocks).
 
 % A block is:
-% heading(Level, Text),
-% blockquote(Blocks),
-% list(Items),
-% code(Text),
-% horisontal_rule,
-% paragraph(Text).
+% heading: h1(Text),
+% blockquote: blockquote(Blocks),
+% unordered list: ul(Items),
+% code: pre(code(Code)),
+% horisontal rule: hr,
+% paragraph: p(Spans).
 
 block(Block) -->
     heading(Block).
@@ -62,17 +63,24 @@ block(Blob) -->
 % # This is an H1 #
 % ## This is an H2 ##
 
-heading(heading(1, Heading)) -->
+heading(h1(Heading)) -->
     [ Text, Bar ],
     { prefix("=", Bar), atom_codes(Heading, Text) }.
 
-heading(heading(2, Heading)) -->
+heading(h2(Heading)) -->
     [ Text, Bar ],
     { prefix("-", Bar), atom_codes(Heading, Text) }.
 
-heading(heading(Level, Heading)) -->
+heading(Heading) -->
     [ Text ],
-    { hash_heading(Text, Level, Heading) }.
+    { hash_heading(Text, Level, TextAtom) },
+    { atomic_concat('h', Level, Name) },
+    { Heading =.. [ Name, TextAtom ] }.
+
+%% hash_heading(+Line:codes, -Level:number, -Heading:atom) is det.
+%
+% Recognizes heading in the form "# Heading". Gives heading level (1-6)
+% and the heading content as an atom.
 
 hash_heading(Line, Level, Heading):-
     prefix(Hashes, "######"),
@@ -129,7 +137,7 @@ strip_bq_start(In, Out):-
 %   line2
 % Item can contain nested Markdown.
 
-list(unordered_list(Items)) -->
+list(ul(Items)) -->
     list_items(Items),
     { length(Items, Len), Len > 0 }.
 
@@ -141,17 +149,32 @@ list_items([]) --> [].
 
 % Recognizes single line item.
 
-list_item(Blocks) -->
+list_item(li(Item)) -->
     [ Line ],
     { Line = [X,32|Text], memberchk(X, "*-+") },
     rest_of_block_indent(Lines),
     { strip_indents(Lines, UnIndented) },
     { trim(Text, Trimmed) },
-    { phrase(blocks(Blocks), [Trimmed|UnIndented], []) }.
+    { atom_codes(Atom, Trimmed) },
+    { phrase(blocks(Blocks), UnIndented, []) },
+    { list_item_fixup(Atom, Blocks, Item) }.
+
+% Merge item line text with next paragraph.
+% XXX this behaviour???
+
+list_item_fixup(Text, Blocks, Item):-
+    Blocks = [p(Par)|Rest], !,
+    atomic_list_concat([Text, Par], '\n', ParText),
+    Item = [p(ParText)|Rest].
+
+% Otherwise add as separated paragraph.
+
+list_item_fixup(Text, Blocks, Item):-
+    Item = [p(Text)|Blocks].
 
 % Recognizes a code block.
 
-code(code(Code)) -->
+code(pre(code(Code))) -->
     [ Line ],
     { prefix("    ", Line) ; prefix("\t", Line) }, !,
     rest_of_block_indent(Lines),
@@ -189,12 +212,12 @@ merge_with_ln(Lines, Result):-
 % At least three * or - characters and might
 % have spaces between them.
 
-horisontal_rule(horisontal_rule) -->
+horisontal_rule(hr) -->
     [ Line ],
     { delete_all(Line, 32, Trimmed) },
     { Trimmed = "***" }.
 
-horisontal_rule(horisontal_rule) -->
+horisontal_rule(hr) -->
     [ Line ],
     { delete_all(Line, 32, Trimmed) },
     { Trimmed = "---" }.
@@ -204,7 +227,7 @@ horisontal_rule(horisontal_rule) -->
 % then concatenates block lines with
 % newlines between.
 
-paragraph(paragraph(Text)) -->
+paragraph(p(Text)) -->
     rest_of_block(Blob),
     { merge_with_ln(Blob, Text) }.
 
@@ -267,26 +290,3 @@ delete_from_suffix(In, Check, Out):-
     reverse(In, RevIn),
     delete_from_prefix(RevIn, Check, RevOut),
     reverse(RevOut, Out).
-
-% Trims whitespaces from the beginning of the list of codes.
-
-trim_left([Code|Codes], Result):-
-    code_type(Code, space), !,
-    trim_left(Codes, Result).
-
-trim_left(Codes, Codes).
-
-% Trims whitespace from the end of the list of codes.
-
-trim_right(Codes, Result):-
-    reverse(Codes, CodesR),
-    trim_left(CodesR, ResultR),
-    reverse(ResultR, Result).
-
-% Trims whitespace from both sides of the list of codes.
-
-trim(Codes, Result):-
-    trim_left(Codes, Tmp1),
-    reverse(Tmp1, Tmp2),
-    trim_left(Tmp2, Tmp3),
-    reverse(Tmp3, Result).

@@ -3,8 +3,8 @@
 ]).
 
 :- use_module(library(readutil)).
-:- use_module(md_blocks).
-:- use_module(md_lex).
+:- use_module(library(md/md_blocks)).
+:- use_module(library(md/md_lex)).
 
 % Markdown parser. Has stricter rules for
 % parsing Markdown than original spec.

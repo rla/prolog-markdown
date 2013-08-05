@@ -3,7 +3,7 @@
 ]).
 
 :- use_module(library(apply)).
-:- use_module(md_dcg).
+:- use_module(library(md/md_dcg)).
 
 %% lex(+Codes:list, -Lines:list) is det.
 %
