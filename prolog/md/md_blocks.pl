@@ -7,6 +7,7 @@
 :- use_module(library(md/md_dcg)).
 :- use_module(library(md/md_lex)).
 :- use_module(library(md/md_trim)).
+:- use_module(library(md/md_span)).
 
 % Parses list of blocks.
 % Blocks are separated by one or more empty lines.
@@ -65,11 +66,15 @@ block(Blob) -->
 
 heading(h1(Heading)) -->
     [ Text, Bar ],
-    { prefix("=", Bar), atom_codes(Heading, Text) }.
+    { trim(Bar, Trimmed) },
+    { maplist('='(61), Trimmed) },
+    { prefix("=", Trimmed), atom_codes(Heading, Text) }.
 
 heading(h2(Heading)) -->
     [ Text, Bar ],
-    { prefix("-", Bar), atom_codes(Heading, Text) }.
+    { trim(Bar, Trimmed) },
+    { maplist('='(45), Trimmed) },
+    { prefix("-", Trimmed), atom_codes(Heading, Text) }.
 
 heading(Heading) -->
     [ Text ],
@@ -135,7 +140,7 @@ strip_bq_start(In, Out):-
 % Items can span multiple lines:
 % + line1
 %   line2
-% Item can contain nested Markdown.
+% Items can contain nested Markdown.
 
 list(ul(Items)) -->
     list_items(Items),
@@ -152,34 +157,36 @@ list_items([]) --> [].
 list_item(li(Item)) -->
     [ Line ],
     { Line = [X,32|Text], memberchk(X, "*-+") },
-    rest_of_block_indent(Lines),
-    { strip_indents(Lines, UnIndented) },
-    { trim(Text, Trimmed) },
-    { atom_codes(Atom, Trimmed) },
-    { phrase(blocks(Blocks), UnIndented, []) },
-    { list_item_fixup(Atom, Blocks, Item) }.
+    rest_of_block_indent(Lines), % take until indent ends
+    { strip_indents(Lines, UnIndented) }, % strip indents
+    { trim(Text, Trimmed) }, % trim line at "+ text"
+    { phrase(blocks(Blocks), UnIndented, []) }, % parse rest of item
+    { list_item_fixup(Trimmed, Blocks, Item) }. % do something with first line
 
 % Merge item line text with next paragraph.
 % XXX this behaviour???
 
 list_item_fixup(Text, Blocks, Item):-
     Blocks = [p(Par)|Rest], !,
-    atomic_list_concat([Text, Par], '\n', ParText),
-    Item = [p(ParText)|Rest].
+    span_parse(Text, Spans),
+    append(Spans, ['\n'|Par], NewPar),
+    Item = [p(NewPar)|Rest].
 
 % Otherwise add as separated paragraph.
 
 list_item_fixup(Text, Blocks, Item):-
-    Item = [p(Text)|Blocks].
+    span_parse(Text, Spans),
+    Item = [p(Spans)|Blocks].
 
 % Recognizes a code block.
 
-code(pre(code(Code))) -->
+code(pre(code(CodeAtom))) -->
     [ Line ],
     { prefix("    ", Line) ; prefix("\t", Line) }, !,
     rest_of_block_indent(Lines),
     { strip_indents([Line|Lines], UnIndented) },
-    { merge_with_ln(UnIndented, Code) }.
+    { merge_with_ln(UnIndented, Code) },
+    { atom_codes(CodeAtom, Code) }.
 
 %% strip_indents(+Lines:list, -Lines:list) is det.
 %
@@ -199,14 +206,20 @@ strip_indent(In, Out):-
 strip_indent(In, Out):-
     append("\t", Out, In).
 
-%% merge_with_ln(+Lines:list, -Result:atom) is det.
+%% merge_with_ln(+Lines:list, -Result:codes) is det.
 %
 % Merges list of lines by putting newline (\n)
 % between them.
 
-merge_with_ln(Lines, Result):-
-    maplist(atom_codes, Atoms, Lines),
-    atomic_list_concat(Atoms, '\n', Result).
+merge_with_ln([], []).
+
+merge_with_ln([Line], Line):- !.
+
+% \n is 10.
+
+merge_with_ln([Line|Lines], Result):-
+    merge_with_ln(Lines, Tmp),
+    append(Line, [10|Tmp], Result).
 
 % Recognizes horisontal rules.
 % At least three * or - characters and might
@@ -225,11 +238,13 @@ horisontal_rule(hr) -->
 % Recognizes single paragraph.
 % Parses block till first empty line,
 % then concatenates block lines with
-% newlines between.
+% newlines between. Applies span elements
+% parser at the end.
 
-paragraph(p(Text)) -->
+paragraph(p(Spans)) -->
     rest_of_block(Blob),
-    { merge_with_ln(Blob, Text) }.
+    { merge_with_ln(Blob, Text) },
+    { span_parse(Text, Spans) }.
 
 % Recognizes all (zero or more) next non-empty lines.
 

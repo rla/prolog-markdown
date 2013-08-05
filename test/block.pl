@@ -1,6 +1,8 @@
 :- begin_tests(md_block).
 :- use_module(library(md/md_parse)).
 
+% Tests for block-level parser.
+
 test(heading_1):-
     parse("abc\n===", [h1(abc)]).
 
@@ -17,70 +19,70 @@ test(heading_5):-
     parse("# abc #", [h1(abc)]).
 
 test(blockquote_1):-
-    parse("> abc", [blockquote([p(abc)])]).
+    parse("> abc", [blockquote([p([\[abc]])])]).
 
 test(blockquote_2):-
-    parse("> abc\n> def", [blockquote([p('abc\ndef')])]).
+    parse("> abc\n> def", [blockquote([p([\['abc\ndef']])])]).
 
 test(blockquote_3):-
-    parse("> abc\n>\n> def", [blockquote([p(abc), p(def)])]).
+    parse("> abc\n>\n> def", [blockquote([p([\[abc]]), p([\[def]])])]).
 
 test(blockquote_4):-
-    parse("> > abc", [blockquote([blockquote([p(abc)])])]).
+    parse("> > abc", [blockquote([blockquote([p([\[abc]])])])]).
 
 test(paragraph_1):-
-    parse("abc", [p(abc)]).
+    parse("abc", [p([\[abc]])]).
 
 test(paragraph_2):-
-    parse("<em>abc</em>", [p('<em>abc</em>')]).
+    parse("<em>abc</em>", [p([\['<em>abc</em>']])]).
 
 test(paragraph_3):-
-    parse("abc\ndef", [p('abc\ndef')]).
+    parse("abc\ndef", [p([\['abc\ndef']])]).
 
 test(list_1):-
     parse("+ a", [ul([
-        li([p(a)])
+        li([p([\[a]])])
     ])]).
 
 test(list_2):-
     parse("+ a\n+ b", [ul([
-        li([p(a)]),
-        li([p(b)])
+        li([p([\[a]])]),
+        li([p([\[b]])])
     ])]).
 
 test(list_3):-
     parse("+ a\n    b", [ul([
-        li([p('a\nb')])
+        li([p([\['a'], '\n', \['b']])])
     ])]).
 
 test(list_4):-
     parse("+  a\n    b", [ul([
-        li([p('a\nb')])
+        li([p([\['a'], '\n', \['b']])])
     ])]).
 
 test(list_5):-
     parse("+ a\n    - b", [ul([
         li([
-            p(a),
+            p([\[a]]),
             ul([
-                li([p(b)])
+                li([p([\[b]])])
             ])
         ])
     ])]).
 
 test(list_6):-
     parse("+ a\n+ b\n+ c", [ul([
-        li([p(a)]),
-        li([p(b)]),
-        li([p(c)])
+        li([p([\[a]])]),
+        li([p([\[b]])]),
+        li([p([\[c]])])
     ])]).
 
 test(list_7):-
     parse("+ a\n    + b\n+ c", [ul([
-        li([p(a), ul([
-            li([p(b)])
+        li([p([\[a]]), ul([
+            li([p([\[b]])])
         ])]),
-        li([p(c)])
+        li([p([\[c]])])
     ])]).
 
 test(code_1):-
