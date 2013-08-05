@@ -2,8 +2,11 @@
     span_parse/2
 ]).
 
+:- use_module(library(apply)).
 :- use_module(library(md/md_dcg)).
 :- use_module(library(md/md_trim)).
+
+% FIXME no HTML in spans?
 
 %% span_parse(+Text:codes, -Out:list) is det.
 %
@@ -15,7 +18,51 @@ span_parse(Codes, Out):-
     phrase(span(Spans), Codes, []), !,
     atoms(Spans, Out).
 
-% Attempts to recognize a link.
+% Escape sequences.
+% More info:
+% http://daringfireball.net/projects/markdown/syntax#backslash
+% Processed first.
+
+span([Char|Spans]) -->
+    "\\", [ Code ],
+    { memberchk(Code, "\\`*_{}[]()#+-.!") }, !,
+    { atom_codes(Char, [ Code ]) },
+    span(Spans).
+
+% Entities. These must be left alone.
+% More info:
+% http://daringfireball.net/projects/markdown/syntax#autoescape
+
+span([\[EntityAtom]|Spans]) -->
+    "&", all_to(";", 10, All),
+    { append(Codes, ";", All) },
+    { maplist(alnum, Codes) }, !,
+    { append("&", All, Entity) },
+    { atom_codes(EntityAtom, Entity) },
+    span(Spans).
+
+% Special characters & and <.
+% More info:
+% http://daringfireball.net/projects/markdown/syntax#autoescape
+
+span(['&'|Spans]) -->
+    "&", !, span(Spans).
+
+% As inline HTML is allowed, < is only escaped
+% when the following character is not a letter and / or
+% < appears at end of stream.
+
+span(['<'|Spans]) -->
+    "<", lookahead(Code),
+    { \+ code_type(Code, alpha), Code \= 47 }, !,
+    span(Spans).
+
+span(['<']) -->
+    "<", at_end, !.
+
+% Recognizes an inline link.
+% More info:
+% http://daringfireball.net/projects/markdown/syntax#link
 
 span([Link|Spans]) -->
     link_label(Label),
@@ -25,13 +72,6 @@ span([Link|Spans]) -->
     { atom_codes(LabelAtom, Label) },
     { link(UrlAtom, TitleAtom, LabelAtom, Link) },
     span(Spans).
-
-% Escapes a lone < that is not part of HTML tag.
-
-%span([escape(<),Code|Spans]) -->
-%    "<", [ Code ],
-%    { \+ code_type(Code, alpha) }, !,
-%    span(Spans).
 
 % Recognizes <script ... </script>.
 % Protects script contents from being processed as Markdown.
@@ -171,7 +211,7 @@ atoms([Token|In], [], [Token|Out]):-
     \+ number(Token), !,
     atoms(In, [], Out).
 
-atoms([Token|In], Acc, [\[Atom]|Out]):-
+atoms([Token|In], Acc, [\[Atom],Token|Out]):-
     \+ number(Token),
     reverse(Acc, Rev),
     atom_codes(Atom, Rev),
@@ -193,6 +233,9 @@ link_url_title(Url, Title) -->
 link_url_title(Url, "") -->
     "(", all_not(")", Url), ")".
 
+alnum(Code):-
+    code_type(Code, alnum).
+
 % Recognizes all input up to the given stopword.
 % Consumes also the stopword.
 % Fails when no stopword is ever encountered.
@@ -203,6 +246,18 @@ all_to(Stop, Stop) -->
 all_to(Stop, [Code|Codes]) -->
     [ Code ],
     all_to(Stop, Codes).
+
+%% all_to(+Stop:codes, +Limit:integer, -Out:codes)// is det.
+%
+% Similar to all_to//2 but includes limit.
+
+all_to(Stop, _, Stop) -->
+    Stop, !.
+
+all_to(Stop, Limit, [Code|Codes]) -->
+    { Limit >= 0 }, [ Code ],
+    { LimitNext is Limit - 1 },
+    all_to(Stop, LimitNext, Codes).
 
 % Recognizes as much input as possible.
 % Input codes must not be contained in the

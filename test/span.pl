@@ -1,11 +1,26 @@
 :- begin_tests(md_span).
 :- use_module(library(md/md_span)).
 
+test(entity):-
+    span_parse("&amp;", [\['&amp;']]).
+
+test(special_amp):-
+    span_parse("AT&T", [\['AT'],'&',\['T']]).
+
+test(special_lt):-
+    span_parse("1<2", [\['1'],'<',\['2']]).
+
+test(special_lt_end):-
+    span_parse("1<", [\['1'],'<']).
+
 test(preserve_html):-
     span_parse("abc<em>1</em>", [\['abc<em>1</em>']]).
 
 test(strong):-
     span_parse("**abc**", [strong(\[abc])]).
+
+test(strong_in_text):-
+    span_parse("abc **def** ghi", [\['abc '],strong(\[def]),\[' ghi']]).
 
 test(strong_emb_html):-
     span_parse("**abc<a>anchor</a>**", [strong(\['abc<a>anchor</a>'])]).
@@ -24,6 +39,9 @@ test(strong_space_underscore):-
 
 test(emphasis):-
     span_parse("*abc*", [em(\[abc])]).
+
+test(emphasis_escape):-
+    span_parse("abc \\*def\\* ghi", [\['abc '], '*', \['def'], '*', \[' ghi']]).
 
 test(emphasis_underscore):-
     span_parse("_abc_", [em(\[abc])]).

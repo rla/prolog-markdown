@@ -12,8 +12,7 @@
 % No lazy rules.
 % No linebreak rule: "end a line with two or more spaces, then type return".
 
-% FIXME collapse simple line items containing single paragraph.
-
 parse(Codes, Blocks):-
     lex(Codes, Tokens),
-    phrase(blocks(Blocks), Tokens, []).
+    phrase(blocks(Out), Tokens, []),
+    Blocks = Out.

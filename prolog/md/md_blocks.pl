@@ -47,6 +47,11 @@ block(Block) -->
 block(Block) -->
     code(Block).
 
+% Block-level HTML.
+
+block(Block) -->
+    html(Block).
+
 % Blob of text, applied when
 % no other block rule matches.
 
@@ -154,14 +159,15 @@ list_items([]) --> [].
 
 % Recognizes single line item.
 
-list_item(li(Item)) -->
+list_item(li(Opt)) -->
     [ Line ],
     { Line = [X,32|Text], memberchk(X, "*-+") },
     rest_of_block_indent(Lines), % take until indent ends
     { strip_indents(Lines, UnIndented) }, % strip indents
     { trim(Text, Trimmed) }, % trim line at "+ text"
     { phrase(blocks(Blocks), UnIndented, []) }, % parse rest of item
-    { list_item_fixup(Trimmed, Blocks, Item) }. % do something with first line
+    { list_item_fixup(Trimmed, Blocks, Item) }, % do something with first line
+    { list_item_opt(Item, Opt) }. % optimize
 
 % Merge item line text with next paragraph.
 % XXX this behaviour???
@@ -177,6 +183,16 @@ list_item_fixup(Text, Blocks, Item):-
 list_item_fixup(Text, Blocks, Item):-
     span_parse(Text, Spans),
     Item = [p(Spans)|Blocks].
+
+%% list_item_opt(+Item, -Item) is det.
+%
+% Removes unnecessary p element from
+% list item when the item contains only
+% the single p.
+
+list_item_opt([p(Spans)], Spans):- !.
+
+list_item_opt(Item, Item).
 
 % Recognizes a code block.
 
@@ -198,13 +214,15 @@ strip_indents(In, Out):-
 %% strip_indent(+Line:codes, -Line:codes) is det.
 %
 % Strips one level (4 spaces or one tab) from
-% given line. Fails if line has no indent.
+% given line. Succeeds when line has no indent.
 
 strip_indent(In, Out):-
-    append("    ", Out, In).
+    append("    ", Out, In), !.
 
 strip_indent(In, Out):-
-    append("\t", Out, In).
+    append("\t", Out, In), !.
+
+strip_indent(In, In).
 
 %% merge_with_ln(+Lines:list, -Result:codes) is det.
 %
@@ -221,6 +239,17 @@ merge_with_ln([Line|Lines], Result):-
     merge_with_ln(Lines, Tmp),
     append(Line, [10|Tmp], Result).
 
+% Recognizes block-level HTML.
+% No Markdown inside it is processed.
+% < is 60.
+
+html(\[HTMLAtom]) -->
+    [ [60,Code|Text] ],
+    { code_type(Code, alpha) }, !,
+    rest_of_block(Lines),
+    { merge_with_ln([[60,Code|Text]|Lines], HTML) },
+    { atom_codes(HTMLAtom, HTML) }.
+
 % Recognizes horisontal rules.
 % At least three * or - characters and might
 % have spaces between them.
@@ -228,12 +257,12 @@ merge_with_ln([Line|Lines], Result):-
 horisontal_rule(hr) -->
     [ Line ],
     { delete_all(Line, 32, Trimmed) },
-    { Trimmed = "***" }.
+    { prefix("***", Trimmed) }.
 
 horisontal_rule(hr) -->
     [ Line ],
     { delete_all(Line, 32, Trimmed) },
-    { Trimmed = "---" }.
+    { prefix("---", Trimmed) }.
 
 % Recognizes single paragraph.
 % Parses block till first empty line,
@@ -256,11 +285,15 @@ rest_of_block([Line|Lines]) -->
 rest_of_block([]) --> [].
 
 % Recognizes all (zero or more) next indented lines.
-% FIXME consider empty lines.
+% Empty lines are also included.
 
 rest_of_block_indent([Line|Lines]) -->
     [ Line ],
     { prefix("  ", Line) ; prefix("\t", Line) }, !,
+    rest_of_block_indent(Lines).
+
+rest_of_block_indent([[]|Lines]) -->
+    empty_line, !,
     rest_of_block_indent(Lines).
 
 rest_of_block_indent([]) --> [].

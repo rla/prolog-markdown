@@ -33,31 +33,28 @@ test(blockquote_4):-
 test(paragraph_1):-
     parse("abc", [p([\[abc]])]).
 
-test(paragraph_2):-
-    parse("<em>abc</em>", [p([\['<em>abc</em>']])]).
-
 test(paragraph_3):-
     parse("abc\ndef", [p([\['abc\ndef']])]).
 
 test(list_1):-
     parse("+ a", [ul([
-        li([p([\[a]])])
+        li([\[a]])
     ])]).
 
 test(list_2):-
     parse("+ a\n+ b", [ul([
-        li([p([\[a]])]),
-        li([p([\[b]])])
+        li([\[a]]),
+        li([\[b]])
     ])]).
 
 test(list_3):-
     parse("+ a\n    b", [ul([
-        li([p([\['a'], '\n', \['b']])])
+        li([\['a'], '\n', \['b']])
     ])]).
 
 test(list_4):-
     parse("+  a\n    b", [ul([
-        li([p([\['a'], '\n', \['b']])])
+        li([\['a'], '\n', \['b']])
     ])]).
 
 test(list_5):-
@@ -65,34 +62,37 @@ test(list_5):-
         li([
             p([\[a]]),
             ul([
-                li([p([\[b]])])
+                li([\[b]])
             ])
         ])
     ])]).
 
 test(list_6):-
     parse("+ a\n+ b\n+ c", [ul([
-        li([p([\[a]])]),
-        li([p([\[b]])]),
-        li([p([\[c]])])
+        li([\[a]]),
+        li([\[b]]),
+        li([\[c]])
     ])]).
 
 test(list_7):-
     parse("+ a\n    + b\n+ c", [ul([
         li([p([\[a]]), ul([
-            li([p([\[b]])])
+            li([\[b]])
         ])]),
-        li([p([\[c]])])
+        li([\[c]])
     ])]).
 
-test(code_1):-
+test(code):-
     parse("    abc", [pre(code(abc))]).
 
-test(code_2):-
+test(code_tabs):-
     parse("\tabc", [pre(code(abc))]).
 
-test(code_3):-
+test(code_multiline):-
     parse("    abc\n    def", [pre(code('abc\ndef'))]).
+
+test(code_empty):-
+    parse("    abc\n\n    def", [pre(code('abc\n\ndef'))]).
 
 test(code_4):-
     parse("\tabc\n\tdef", [pre(code('abc\ndef'))]).
@@ -105,5 +105,8 @@ test(horisontal_rule_2):-
 
 test(horisontal_rule_3):-
     parse("* * *", [hr]).
+
+test(block):-
+    parse("<div>abc</div>", [\['<div>abc</div>']]).
 
 :- end_tests(md_block).
