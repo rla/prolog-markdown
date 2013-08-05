@@ -5,6 +5,7 @@
 :- use_module(library(apply)).
 :- use_module(library(md/md_dcg)).
 :- use_module(library(md/md_trim)).
+:- use_module(library(md/md_scan)).
 
 % FIXME no HTML in spans?
 
@@ -34,10 +35,9 @@ span([Char|Spans]) -->
 % http://daringfireball.net/projects/markdown/syntax#autoescape
 
 span([\[EntityAtom]|Spans]) -->
-    "&", all_to(";", 10, All),
-    { append(Codes, ";", All) },
+    "&", any(Codes, 10), ";",
     { maplist(alnum, Codes) }, !,
-    { append("&", All, Entity) },
+    { flatten(["&", Codes, ";"], Entity) },
     { atom_codes(EntityAtom, Entity) },
     span(Spans).
 
@@ -77,32 +77,33 @@ span([Link|Spans]) -->
 % Protects script contents from being processed as Markdown.
 
 span([\[ScriptAtom]|Spans]) -->
-    "<script", all_to("</script>", Script), !,
-    { append("<script", Script, All) },
-    { atom_codes(ScriptAtom, All) },
+    "<script", any(Codes), "</script>", !,
+    { flatten(["<script", Codes, "</script>"], Script) },
+    { atom_codes(ScriptAtom, Script) },
     span(Spans).
 
 % Recognizes inline automatic http <link>.
 
-span([link(Url)|Spans]) -->
-    "<http", all_not(">", Rest), !,
-    { append("http", Rest, Url) },
+span([Link|Spans]) -->
+    "<http", any(Codes), ">", !,
+    { append("http", Codes, Url) },
+    { atom_codes(UrlAtom, Url) },
+    { link(UrlAtom, '', UrlAtom, Link) },
     span(Spans).
 
 % Recognizes inline mail link <address@example.com>
 
-span([mail(Address)|Spans]) -->
-    "<", all_not("@> ", User), "@", all_not(">", Host), !,
-    { append(User, "@", UserAt) },
-    { append(UserAt, Host, Address) },
+span([Link|Spans]) -->
+    "<", any(User), "@", any(Host), ">", !,
+    { flatten([User, "@", Host], Address) },
+    { mail_link(Address, Link) },
     span(Spans).
 
 % Recognizes strong **something**.
 % No nesting.
 
 span([strong(HTML)|Spans]) -->
-    "**", all_to("**", All), !,
-    { append(Strong, "**", All) },
+    "**", any(Strong), "**", !,
     { span_atom(Strong, HTML) },
     span(Spans).
 
@@ -110,8 +111,7 @@ span([strong(HTML)|Spans]) -->
 % No nesting.
 
 span([strong(HTML)|Spans]) -->
-    "__", all_to("__", All), !,
-    { append(Strong, "__", All) },
+    "__", any(Strong), "__", !,
     { span_atom(Strong, HTML) },
     span(Spans).
 
@@ -119,25 +119,22 @@ span([strong(HTML)|Spans]) -->
 % The first character following * must be a non-space.
 
 span([em(HTML)|Spans]) -->
-    "*", non_space(Code), all_to("*", All), !,
-    { append(Strong, "*", All) },
-    { span_atom([Code|Strong], HTML) },
+    "*", non_space(Code), any(Emph), "*", !,
+    { span_atom([Code|Emph], HTML) },
     span(Spans).
 
 % Recognizes emphasis _something_.
 % The first character following _ must be a non-space.
 
 span([em(HTML)|Spans]) -->
-    "_", non_space(Code), all_to("_", All), !,
-    { append(Strong, "_", All) },
-    { span_atom([Code|Strong], HTML) },
+    "_", non_space(Code), any(Emph), "_", !,
+    { span_atom([Code|Emph], HTML) },
     span(Spans).
 
 % Recognizes inline code ``code``.
 
 span([code(Atom)|Spans]) -->
-    "``", all_to("``", All), !,
-    { append(Raw, "``", All) },
+    "``", any(Raw), "``", !,
     { trim(Raw, Trimmed) },
     { atom_codes(Atom, Trimmed) },
     span(Spans).
@@ -145,8 +142,7 @@ span([code(Atom)|Spans]) -->
 % Recognizes inline code `code`.
 
 span([code(Atom)|Spans]) -->
-    "`", all_to("`", All), !,
-    { append(Raw, "`", All) },
+    "`", any(Raw), "`", !,
     { trim(Raw, Trimmed) },
     { atom_codes(Atom, Trimmed) },
     span(Spans).
@@ -176,6 +172,17 @@ link(Url, '', Label, Element):- !,
 
 link(Url, Title, Label, Element):-
     Element = a([href=Url, title=Title], Label).
+
+%% mail_link(+Address:codes, -Element) is det.
+%
+% Created HTML link element for an email address.
+% FIXME use special encoding.
+
+mail_link(Address, Element):-
+    append("mailto:", Address, Href),
+    atom_codes(HrefAtom, Href),
+    atom_codes(AddressAtom, Address),
+    Element = a([href=HrefAtom], AddressAtom).
 
 %% span_atom(+Codes:list, -HTML:term) is det.
 %
@@ -223,49 +230,15 @@ non_space(Code) -->
     [ Code ], { \+ code_type(Code, space) }.
 
 link_label(Label) -->
-    "[", all_not("]", Label), "]".
+    "[", any(Label), "]", !.
 
 % 32 - space, 34 - ", 41 - ).
 
 link_url_title(Url, Title) -->
-    "(", all_not(") ", Url), [32,34], all_not([34,41], Title), [34,41], !.
+    "(", any(Url), [32,34], any(Title), [34,41], !.
 
 link_url_title(Url, "") -->
-    "(", all_not(")", Url), ")".
+    "(", any(Url), ")", !.
 
 alnum(Code):-
     code_type(Code, alnum).
-
-% Recognizes all input up to the given stopword.
-% Consumes also the stopword.
-% Fails when no stopword is ever encountered.
-
-all_to(Stop, Stop) -->
-    Stop, !.
-
-all_to(Stop, [Code|Codes]) -->
-    [ Code ],
-    all_to(Stop, Codes).
-
-%% all_to(+Stop:codes, +Limit:integer, -Out:codes)// is det.
-%
-% Similar to all_to//2 but includes limit.
-
-all_to(Stop, _, Stop) -->
-    Stop, !.
-
-all_to(Stop, Limit, [Code|Codes]) -->
-    { Limit >= 0 }, [ Code ],
-    { LimitNext is Limit - 1 },
-    all_to(Stop, LimitNext, Codes).
-
-% Recognizes as much input as possible.
-% Input codes must not be contained in the
-% list Check.
-
-all_not(Check, [Code|Codes]) -->
-    [ Code ],
-    { \+ memberchk(Code, Check) }, !,
-    all_not(Check, Codes).
-
-all_not(_, []) --> [].

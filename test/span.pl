@@ -76,6 +76,9 @@ test(link_with_title):-
 test(link_without_title):-
     span_parse("[label](http://google.com)", [a([href='http://google.com'], label)]).
 
+test(inline_link):-
+    span_parse("<http://google.com>", [a([href='http://google.com'], 'http://google.com')]).
+
 test(script):-
     span_parse("<script>var x = 1+2;</script>", [\['<script>var x = 1+2;</script>']]).
 

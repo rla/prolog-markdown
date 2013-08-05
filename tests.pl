@@ -5,10 +5,11 @@
 % Loads all tests. Names are relative to CWD.
 
 :- load_files([
+    test/scan,
     test/block,
     test/span,
     test/html
 ], [ if(not_loaded) ]).
 
 md_tests:-
-    run_tests([ md_block, md_span, md_html ]).
+    run_tests([ md_block, md_span, md_html, md_scan ]).

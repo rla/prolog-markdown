@@ -113,10 +113,10 @@ hash_heading(Line, Level, Heading):-
 % the block parser recursively.
 
 blockquote(blockquote(Quote)) -->
-    [ Text ],
-    { prefix("> ", Text) },
-    rest_of_block(Lines),
-    { strip_bq_starts([Text|Lines], Stripped) },
+    la_is_blockquote,
+    any(Lines),
+    block_end, !,
+    { strip_bq_starts(Lines, Stripped) },
     { phrase(blocks(Quote), Stripped, []) }.
 
 %% strip_bq_starts(+Lines:list, -Lines:list) is det.
@@ -136,6 +136,10 @@ strip_bq_start(In, Out):-
 
 strip_bq_start(In, Out):-
     append(">", Out, In), !.
+
+% Allows for "lazy" block.
+
+strip_bq_start(In, In).
 
 % Recognizes unordered list containing one or more items.
 % Unordered lists are in the form:
@@ -241,14 +245,27 @@ merge_with_ln([Line|Lines], Result):-
 
 % Recognizes block-level HTML.
 % No Markdown inside it is processed.
-% < is 60.
 
 html(\[HTMLAtom]) -->
-    [ [60,Code|Text] ],
-    { code_type(Code, alpha) }, !,
-    rest_of_block(Lines),
-    { merge_with_ln([[60,Code|Text]|Lines], HTML) },
+    la_is_html_block,
+    any(Lines),
+    block_end, !,
+    { merge_with_ln(Lines, HTML) },
     { atom_codes(HTMLAtom, HTML) }.
+
+block_end --> empty_line.
+block_end --> at_end.
+
+% Start of HTML block. "<t"
+
+la_is_html_block -->
+    lookahead([60,Code|_]),
+    { code_type(Code, alpha) }.
+
+% Start of blockquote. "> "
+
+la_is_blockquote -->
+    lookahead([62,32|_]).
 
 % Recognizes horisontal rules.
 % At least three * or - characters and might
@@ -271,18 +288,10 @@ horisontal_rule(hr) -->
 % parser at the end.
 
 paragraph(p(Spans)) -->
-    rest_of_block(Blob),
+    any(Blob),
+    block_end,
     { merge_with_ln(Blob, Text) },
     { span_parse(Text, Spans) }.
-
-% Recognizes all (zero or more) next non-empty lines.
-
-rest_of_block([Line|Lines]) -->
-    [ Line ],
-    { Line \= [] }, !,
-    rest_of_block(Lines).
-
-rest_of_block([]) --> [].
 
 % Recognizes all (zero or more) next indented lines.
 % Empty lines are also included.
