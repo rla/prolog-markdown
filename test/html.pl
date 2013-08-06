@@ -20,7 +20,7 @@ span_html(Codes, HTML):-
 % Helper to turn Markdown into HTML code (atom).
 
 html(Codes, HTML):-
-    parse(Codes, Blocks),
+    md_parse(Codes, Blocks),
     phrase(html(Blocks), Tokens, []),
     strip_layout(Tokens, Clean),
     with_output_to(atom(HTML), print_html(Clean)).
