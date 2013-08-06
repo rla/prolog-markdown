@@ -7,8 +7,9 @@
 :- load_files([
     test/block,
     test/span,
-    test/html
+    test/html,
+    test/file
 ], [ if(not_loaded) ]).
 
 md_tests:-
-    run_tests([ md_block, md_span, md_html ]).
+    run_tests([ md_block, md_span, md_html, md_file ]).

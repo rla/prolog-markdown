@@ -10,7 +10,7 @@ clean:
 
 tmp/markdown-$(VERSION).tgz:
 	mkdir -p tmp
-	tar cvzf $@ prolog test pack.pl README.md tests.pl
+	tar cvzf $@ prolog test pack.pl README.md tests.pl data
 
 package: tmp/markdown-$(VERSION).tgz
 

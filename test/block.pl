@@ -19,16 +19,16 @@ test(heading_5):-
     md_parse("# abc #", [h1(abc)]).
 
 test(blockquote_1):-
-    md_parse("> abc", [blockquote([p([\[abc]])])]).
+    md_parse("> abc", [blockquote([\[abc]])]).
 
 test(blockquote_2):-
-    md_parse("> abc\n> def", [blockquote([p([\['abc\ndef']])])]).
+    md_parse("> abc\n> def", [blockquote([\['abc\ndef']])]).
 
 test(blockquote_3):-
     md_parse("> abc\n>\n> def", [blockquote([p([\[abc]]), p([\[def]])])]).
 
 test(blockquote_4):-
-    md_parse("> > abc", [blockquote([blockquote([p([\[abc]])])])]).
+    md_parse("> > abc", [blockquote([blockquote([\[abc]])])]).
 
 test(paragraph_1):-
     md_parse("abc", [p([\[abc]])]).

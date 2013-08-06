@@ -23,14 +23,6 @@ blocks([Block|Blocks]) -->
     empty_lines,
     blocks(Blocks).
 
-% A block is:
-% heading: h1(Text),
-% blockquote: blockquote(Blocks),
-% unordered list: ul(Items),
-% code: pre(code(Code)),
-% horisontal rule: hr,
-% paragraph: p(Spans).
-
 block(Block) -->
     heading(Block).
 
@@ -46,13 +38,8 @@ block(Block) -->
 block(Block) -->
     code(Block).
 
-% Block-level HTML.
-
 block(Block) -->
     html(Block).
-
-% Blob of text, applied when
-% no other block rule matches.
 
 block(Blob) -->
     paragraph(Blob).
@@ -88,13 +75,13 @@ hash_heading_line(Text, Level) -->
 
 % Recognizes blockquote.
 % Can contain nested Markdown.
-% FIXME optimize.
 % More info: http://daringfireball.net/projects/markdown/syntax#blockquote
 
-blockquote(blockquote(Quote)) -->
+blockquote(blockquote(Opt)) -->
     "> ", any(Text), ((ln, white, ln) ; at_end), !,
     { phrase(strip_bq(Stripped), Text, "") }, !,
-    { phrase(blocks(Quote), Stripped, []) }.
+    { phrase(blocks(Quote), Stripped, []) },
+    { element_opt(Quote, Opt) }.
 
 % Strips blockquote start from blockquote text.
 
@@ -133,7 +120,7 @@ list_item(li(Opt)) -->
     { phrase(blocks(Blocks), Stripped, "") }, !,
     { trim(Line, Trimmed) },
     { list_item_fixup(Trimmed, Blocks, Item) },
-    { list_item_opt(Item, Opt) }.
+    { element_opt(Item, Opt) }.
 
 % List item start.
 
@@ -192,7 +179,6 @@ list_item_end(_) -->
     { \+ code_type(X, space) }.
 
 % Merge item line text with next paragraph.
-% XXX this behaviour???
 
 list_item_fixup(Text, Blocks, Item):-
     Blocks = [p(Par)|Rest], !,
@@ -206,15 +192,15 @@ list_item_fixup(Text, Blocks, Item):-
     span_parse(Text, Spans),
     Item = [p(Spans)|Blocks].
 
-%% list_item_opt(+Item, -Item) is det.
+%% element_opt(+Item, -Item) is det.
 %
 % Removes unnecessary p element from
-% list item when the item contains only
-% the single p.
+% element when the element contains only
+% the single p. Used for list items and blockquotes.
 
-list_item_opt([p(Spans)], Spans):- !.
+element_opt([p(Spans)], Spans):- !.
 
-list_item_opt(Item, Item).
+element_opt(Elem, Elem).
 
 % Recognizes a code block.
 
