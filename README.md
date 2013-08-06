@@ -1,15 +1,37 @@
 # prolog-markdown
 
 Markdown parser implemented in Prolog. Compatible with [SWI-Prolog](http://www.swi-prolog.org/) as the
-output tree is for direct use by [print_html/2](http://www.swi-prolog.org/pldoc/doc_for?object=print_html/2).
+output tree is for direct use by [html/1](http://www.swi-prolog.org/pldoc/doc_for?object=html/1).
 
 The "specification" for the parser was taken from <http://daringfireball.net/projects/markdown/syntax>.
+
+## Installation
+
+TODO: needs better description. Currently a package has to be built, then it can be installed
+with [pack_install/1](http://www.swi-prolog.org/pldoc/doc_for?object=pack_install/1).
+
+## Usage
+
+Parse into a structure usable by
+[html/1](http://www.swi-prolog.org/pldoc/doc_for?object=html/1).
+
+    :- use_module(library(md/md_parse)).
+
+    md_parse("# Hello #", Blocks).
+
+Convert into HTML atom:
+
+    :- use_module(library(md/md_parse)).
+
+    md_html("# Hello #", Html).
 
 ## TODO
 
 * Reference links
 * Allow single quotes for inline link title
 * Ordered lists
+* Line break rule with spaces
+* GitHub-flavoured code blocks
 
 ## License (The MIT License)
 
