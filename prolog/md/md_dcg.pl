@@ -4,8 +4,13 @@
     pushback//1,
     lookahead//1,
     any//1,
-    any//2
+    any//2,
+    la//1,
+    dcg_get//1,
+    dcg_put//1
 ]).
+
+:- use_module(library(lists)).
 
 % FIXME needs documentation.
 
@@ -38,3 +43,12 @@ any([], _) --> [].
 any([Code|Codes], Limit) -->
     { Limit >= 0, LimitNext is Limit - 1 },
     [ Code ], any(Codes, LimitNext).
+
+% Looks ahead list prefix.
+
+la(Prefix, List, List):-
+    prefix(Prefix, List).
+
+dcg_get(List, List, List).
+
+dcg_put(List, List, List).

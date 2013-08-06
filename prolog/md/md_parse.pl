@@ -13,6 +13,6 @@
 % No linebreak rule: "end a line with two or more spaces, then type return".
 
 parse(Codes, Blocks):-
-    lex(Codes, Tokens),
-    phrase(blocks(Out), Tokens, []),
+    % lex(Codes, Tokens),
+    phrase(blocks(Out), Codes, ""),
     Blocks = Out.

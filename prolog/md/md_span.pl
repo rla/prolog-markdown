@@ -5,7 +5,6 @@
 :- use_module(library(apply)).
 :- use_module(library(md/md_dcg)).
 :- use_module(library(md/md_trim)).
-:- use_module(library(md/md_scan)).
 
 % FIXME no HTML in spans?
 
