@@ -2,7 +2,9 @@
     inline_string//1, % -Codes
     ln//0,
     string_limit//2,  % -Codes, +Limit
-    lookahead//1      % ?Code
+    lookahead//1,     % ?Code
+    lookahead_ln//0,
+    lookahead_ln_or_eos//0
 ]).
 
 /** <module> Line-based parsing primitives.
@@ -49,7 +51,26 @@ inline_string([Code|Codes]) -->
     [Code],
     inline_string(Codes).
 
-%% ln// is det.
+% lookahead_ln_or_eos// is semidet.
+%
+% Looks-ahead a line end or
+% end-of-stream. Puts back `\n`
+% when a line end is recognized.
+
+lookahead_ln_or_eos -->
+    lookahead_ln, !.
+
+lookahead_ln_or_eos -->
+    eos.
+
+%% lookahead_ln// is semidet.
+%
+% Looks-ahead a line end. Puts
+% back `\n` when it is recognized.
+
+lookahead_ln, "\n" --> ln.
+
+%% ln// is semidet.
 %
 % Recognizes different line
 % endings.

@@ -1,5 +1,7 @@
 :- module(md_links, [
-    md_links/3
+    md_links/3, % +CodesIn, -CodesOut, -Links
+    md_links/2, % +CodesIn, -CodesOut,
+    md_link/3   % ?Id, ?Url, ?Title
 ]).
 
 /** <module> Markdown reference link parser
@@ -9,6 +11,33 @@ the stream of symbol codes.
 */
 
 :- use_module(library(dcg/basics)).
+:- use_module(md_line).
+
+% link(Id, Url, Title).
+
+:- thread_local(link/3).
+
+%% md_link(?Id, ?Url, ?Title) is det.
+%
+% Retrieves recorded link from the last
+% invocation of md_links/2.
+
+md_link(Id, Url, Title):-
+    link(Id, Url, Title).
+
+% md_links(+CodesIn, -CodesOut) is det.
+%
+% Same as md_links/3 but stores links
+% in threadlocal predicate which is cleared
+% on each invocation of this predicate.
+
+md_links(CodesIn, CodesOut):-
+    retractall(link(_, _, _)),
+    md_links(CodesIn, CodesOut, Links),
+    maplist(assert_link, Links).
+
+assert_link(link(Id, Url, Title)):-
+    assertz(link(Id, Url, Title)).
 
 % md_links(+CodesIn, -CodesOut, -Links) is det.
 %
@@ -39,9 +68,18 @@ links([Code|Codes], Links) -->
 % Records the link but outputs nothing.
 
 link(link(Id, Url, Title)) -->
-    whites, link_id(Id),
+    link_indent, link_id(Id),
     whites, link_url(Url),
     whites, link_title(Title).
+
+% Link might be indented with
+% up to 3 spaces. More info:
+% http://daringfireball.net/projects/markdown/syntax#link
+
+link_indent --> "   ".
+link_indent --> "  ".
+link_indent --> " ".
+link_indent --> "".
 
 % Recognizes a link title.
 % When no title is found, Title is
@@ -56,24 +94,24 @@ link_title(Title) -->
 link_title('') --> "".
 
 link_title_same_line(Title) -->
-    "'", !, string(Codes), "'",
-    whites, la_ln_or_eos,
+    "'", !, inline_string(Codes), "'",
+    whites, lookahead_ln_or_eos,
     { atom_codes(Title, Codes) }.
 
 link_title_same_line(Title) -->
-    "(", !, string(Codes), ")",
-    whites, la_ln_or_eos,
+    "(", !, inline_string(Codes), ")",
+    whites, lookahead_ln_or_eos,
     { atom_codes(Title, Codes) }.
 
 link_title_same_line(Title) -->
-    "\"", string(Codes), "\"",
-    whites, la_ln_or_eos,
+    "\"", inline_string(Codes), "\"",
+    whites, lookahead_ln_or_eos,
     { atom_codes(Title, Codes) }.
 
 % Recognizes a link identifier.
 
 link_id(Id) -->
-    "[", whites, string(Codes), whites, "]:",
+    "[", whites, inline_string(Codes), whites, "]:",
     {
         atom_codes(Tmp, Codes),
         downcase_atom(Tmp, Id)
@@ -82,20 +120,9 @@ link_id(Id) -->
 % Recognizes a link URL.
 
 link_url(Url) -->
-    "<", !, string(Codes), ">",
+    "<", !, inline_string(Codes), ">",
     { atom_codes(Url, Codes) }.
 
 link_url(Url) -->
     string_without([0'\n, 0'\t, 0' ], Codes),
     { atom_codes(Url, Codes) }.
-
-% Lookahead line end or eos.
-
-la_ln_or_eos -->
-    (la_ln ; eos), !.
-
-la_ln, "\n" --> ln.
-
-ln --> "\r\n", !.
-ln --> "\n", !.
-ln --> "\r".
