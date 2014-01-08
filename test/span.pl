@@ -1,88 +1,88 @@
 :- begin_tests(md_span).
-:- use_module(library(md/md_span)).
+:- use_module(prolog/md/md_span).
 
 test(entity):-
-    span_parse("&amp;", [\['&amp;']]).
+    md_span_string("&amp;", [\['&amp;']]).
 
 test(special_amp):-
-    span_parse("AT&T", [\['AT'],'&',\['T']]).
+    md_span_string("AT&T", [\['AT'],'&',\['T']]).
 
 test(special_lt):-
-    span_parse("1<2", [\['1'],'<',\['2']]).
+    md_span_string("1<2", [\['1'],'<',\['2']]).
 
 test(special_lt_end):-
-    span_parse("1<", [\['1'],'<']).
+    md_span_string("1<", [\['1'],'<']).
 
 test(preserve_html):-
-    span_parse("abc<em>1</em>", [\['abc<em>1</em>']]).
+    md_span_string("abc<em>1</em>", [\['abc<em>1</em>']]).
 
 test(strong):-
-    span_parse("**abc**", [strong(\[abc])]).
+    md_span_string("**abc**", [strong(\[abc])]).
 
 test(strong_in_text):-
-    span_parse("abc **def** ghi", [\['abc '],strong(\[def]),\[' ghi']]).
+    md_span_string("abc **def** ghi", [\['abc '],strong(\[def]),\[' ghi']]).
 
 test(strong_emb_html):-
-    span_parse("**abc<a>anchor</a>**", [strong(\['abc<a>anchor</a>'])]).
+    md_span_string("**abc<a>anchor</a>**", [strong(\['abc<a>anchor</a>'])]).
 
 test(strong_underscore):-
-    span_parse("__abc__", [strong(\[abc])]).
+    md_span_string("__abc__", [strong(\[abc])]).
 
 test(strong_nonest):-
-    span_parse("**__abc__**", [strong(\['__abc__'])]).
+    md_span_string("**__abc__**", [strong(\['__abc__'])]).
 
 test(strong_space):-
-    span_parse("** abc**", [strong(\[' abc'])]).
+    md_span_string("** abc**", [strong(\[' abc'])]).
 
 test(strong_space_underscore):-
-    span_parse("__ abc__", [strong(\[' abc'])]).
+    md_span_string("__ abc__", [strong(\[' abc'])]).
 
 test(emphasis):-
-    span_parse("*abc*", [em(\[abc])]).
+    md_span_string("*abc*", [em(\[abc])]).
 
 test(emphasis_escape):-
-    span_parse("abc \\*def\\* ghi", [\['abc '], '*', \['def'], '*', \[' ghi']]).
+    md_span_string("abc \\*def\\* ghi", [\['abc '], '*', \['def'], '*', \[' ghi']]).
 
 test(emphasis_underscore):-
-    span_parse("_abc_", [em(\[abc])]).
+    md_span_string("_abc_", [em(\[abc])]).
 
 test(no_emphasis):-
-    span_parse("* abc*", [\['* abc*']]).
+    md_span_string("* abc*", [\['* abc*']]).
 
 test(no_emphasis_underscore):-
-    span_parse("_ abc_", [\['_ abc_']]).
+    md_span_string("_ abc_", [\['_ abc_']]).
 
 test(code_1):-
-    span_parse("`p1:- p2, p3.`", [code('p1:- p2, p3.')]).
+    md_span_string("`p1:- p2, p3.`", [code('p1:- p2, p3.')]).
 
 test(code_1_entities):-
-    span_parse("`<blink>`", [code('<blink>')]). % escaped by html//1.
+    md_span_string("`<blink>`", [code('<blink>')]). % escaped by html//1.
 
 test(code_2):-
-    span_parse("``p1:- p2, p3.``", [code('p1:- p2, p3.')]).
+    md_span_string("``p1:- p2, p3.``", [code('p1:- p2, p3.')]).
 
 test(code_2_entities):-
-    span_parse("``<blink>``", [code('<blink>')]). % escaped by html//1.
+    md_span_string("``<blink>``", [code('<blink>')]). % escaped by html//1.
 
 test(code_2_tick):-
-    span_parse("`` ` ``", [code('`')]).
+    md_span_string("`` ` ``", [code('`')]).
 
 test(code_2_ticks):-
-    span_parse("`` `foo` ``", [code('`foo`')]).
+    md_span_string("`` `foo` ``", [code('`foo`')]).
 
 test(link_with_title):-
-    span_parse("[label](http://google.com \"Google\")", [a([href='http://google.com', title='Google'], label)]).
+    md_span_string("[label](http://google.com \"Google\")", [a([href='http://google.com', title='Google'], label)]).
 
 test(link_without_title):-
-    span_parse("[label](http://google.com)", [a([href='http://google.com'], label)]).
+    md_span_string("[label](http://google.com)", [a([href='http://google.com'], label)]).
 
 test(inline_link):-
-    span_parse("<http://google.com>", [a([href='http://google.com'], 'http://google.com')]).
+    md_span_string("<http://google.com>", [a([href='http://google.com'], 'http://google.com')]).
 
 test(script):-
-    span_parse("<script>var x = 1+2;</script>", [\['<script>var x = 1+2;</script>']]).
+    md_span_string("<script>var x = 1+2;</script>", [\['<script>var x = 1+2;</script>']]).
 
 test(script_markdown):-
-    span_parse("<script>var x = 1*2*3;</script>", [\['<script>var x = 1*2*3;</script>']]). % contains emphasis *2*.
+    md_span_string("<script>var x = 1*2*3;</script>", [\['<script>var x = 1*2*3;</script>']]). % contains emphasis *2*.
 
 :- end_tests(md_span).

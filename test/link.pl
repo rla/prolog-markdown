@@ -91,4 +91,10 @@ test(link_14):-
     md_links_strings("[id]: http://example.com 'Title' 1'", "",
         [link(id, 'http://example.com', 'Title\' 1')]).
 
+% Link indented deeper than 3 spaces is ignored.
+
+test(link_15):-
+    md_links_strings("    [id]: http://example.com 'Title'",
+        "    [id]: http://example.com 'Title'", []).
+
 :- end_tests(md_links).

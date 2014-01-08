@@ -1,5 +1,5 @@
 :- begin_tests(md_file).
-:- use_module(library(md/md_parse)).
+:- use_module(prolog/md/md_parse).
 
 test(file):-
     md_parse_file('data/file.md', Blocks),
@@ -19,7 +19,7 @@ test(file):-
     assertion(nth0(7, Blocks, ul(NestItems))),
     assertion(NestItems = [li([ul(_)]), li(ul(_))]),
     assertion(nth0(8, Blocks, p([\['A paragraph.']]))),
-    assertion(nth0(9, Blocks, pre(code('// code block\np1 :- p2, p3.')))),
-    assertion(nth0(10, Blocks, \['<div>\n  <div>HTML</div>\n</div>\n'])).
+    assertion(nth0(9, Blocks, pre(code('// code block\np1 :- p2, p3.\n')))),
+    assertion(nth0(10, Blocks, \['<div>\n  <div>HTML</div>\n</div>'])).
 
 :- end_tests(md_file).

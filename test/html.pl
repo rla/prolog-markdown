@@ -5,25 +5,27 @@
 
 :- use_module(library(http/html_write)).
 :- use_module(library(apply)).
-:- use_module(library(md/md_span)).
-:- use_module(library(md/md_parse)).
+
+:- use_module(prolog/md/md_span).
+:- use_module(prolog/md/md_parse).
 
 % Helper to turn Markdown span elements
 % into HTML code (atom).
 
-span_html(Codes, HTML):-
-    span_parse(Codes, Spans),
-    phrase(html(Spans), Tokens, []),
+span_html(String, Html):-
+    string_codes(String, Codes),
+    md_span_codes(Codes, Spans),
+    phrase(html(Spans), Tokens),
     strip_layout(Tokens, Clean),
-    with_output_to(atom(HTML), print_html(Clean)).
+    with_output_to(atom(Html), print_html(Clean)).
 
 % Helper to turn Markdown into HTML code (atom).
 
-html(Codes, HTML):-
-    md_parse(Codes, Blocks),
+html(String, Html):-
+    md_parse_string(String, Blocks),
     phrase(html(Blocks), Tokens, []),
     strip_layout(Tokens, Clean),
-    with_output_to(atom(HTML), print_html(Clean)).
+    with_output_to(atom(Html), print_html(Clean)).
 
 strip_layout(In, Out):-
     exclude(layout, In, Out).
