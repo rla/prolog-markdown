@@ -1,15 +1,18 @@
 version:=$(shell swipl -q -s pack -g 'version(V),writeln(V)' -t halt)
+packfile=markdown-$(version).tgz
+remote=packs@packs.rlaanemets.com:/usr/share/nginx/packs.rlaanemets.com/markdown
 
 test:
 	swipl -s tests/tests.pl -g run_tests -t halt
 
-clean:
-	rm -rf tmp/
+package: test
+	tar cvzf $(packfile) prolog tests pack.pl README.md LICENSE
 
-tmp/markdown-$(version).tgz:
-	mkdir -p tmp
-	tar cvzf $@ prolog test pack.pl README.md tests.pl data
+doc:
+	swipl -q -t 'doc_save(prolog/md, [doc_root(doc),format(html),title(docstore),if(true),recursive(true)])'
 
-package: tmp/markdown-$(version).tgz
+upload: doc # FIXME needs package too
+	#scp $(packfile) $(remote)/$(packfile)
+	rsync -avz -e ssh doc $(remote)
 
-.PHONY: test clean package
+.PHONY: test package doc upload
