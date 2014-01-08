@@ -2,6 +2,7 @@
 
 :- load_files([
     tests/link,
+    tests/header,
     tests/block,
     tests/span_link,
     tests/span,

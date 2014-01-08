@@ -35,7 +35,7 @@ Convert into HTML atom:
 
 ## License (The MIT License)
 
-    Copyright (c) 2013 Raivo Laanemets
+    Copyright (c) 2013-2014 Raivo Laanemets
 
     Permission is hereby granted, free of charge, to any person
     obtaining a copy of this software and associated documentation

@@ -78,12 +78,13 @@ atx_level(6) --> "###### ".
 % atx-styles headings. Such text
 % ends with #, line end, or eos.
 % Escapes \# must be also processed.
+% Line ending is not consumed.
 
 atx_header_text([]) -->
     "#", !.
 
 atx_header_text([]) -->
-    ln_or_eos, !.
+    lookahead_ln_or_eos, !.
 
 atx_header_text([0'#|Codes]) -->
     "\\#", !,
