@@ -9,7 +9,7 @@ package: test
 	tar cvzf $(packfile) prolog tests pack.pl README.md LICENSE
 
 doc:
-	swipl -q -t 'doc_save(prolog/md, [doc_root(doc),format(html),title(docstore),if(true),recursive(true)])'
+	swipl -q -t 'doc_save(prolog/md, [doc_root(doc),format(html),title(markdown),if(true),recursive(true)])'
 
 upload: doc # FIXME needs package too
 	#scp $(packfile) $(remote)/$(packfile)
