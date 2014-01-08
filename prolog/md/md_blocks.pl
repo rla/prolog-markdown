@@ -1,285 +1,286 @@
-:- module(md_blocks2, [
-    blocks//1
+:- module(md_blocks, [
+    md_blocks//1
 ]).
 
-:- use_module(library(apply)).
-:- use_module(library(lists)).
-:- use_module(library(md/md_dcg)).
-:- use_module(library(md/md_trim)).
-:- use_module(library(md/md_span)).
+/** <module> Block-level parser for Markdown
 
-% Parses list of blocks.
-% Blocks are separated by one or more empty lines.
+Parses Markdown block-level constructs like
+paragraphs, lists, code blocks, blockquotes etc.
+Applies span-level parsing for all blocks.
+*/
 
-blocks([]) -->
+:- use_module(library(dcg/basics)).
+
+:- use_module(md_list_item).
+:- use_module(md_header).
+:- use_module(md_span).
+:- use_module(md_trim).
+:- use_module(md_line).
+
+%% md_blocks(-Blocks)// is det.
+%
+% Parses given Markdown into a structure
+% accepted by html//1.
+
+md_blocks(Blocks) -->
+    blocks(top, [], Blocks).
+
+% Contextified block parsing.
+% Some types of blocks are not
+% allowed in contexts other than top.
+% Currently used contexts are: top,
+% list and bq.
+
+md_blocks(Ctx, Blocks) -->
+    blocks(Ctx, [], Blocks).
+
+% Recognizes all blocks
+% in the input. When a block is not
+% recognized, one line as removed and
+% added into accumulator. These accumulated
+% lines are added as paragraph blocks.
+% This matches better the sematics of
+% http://daringfireball.net/projects/markdown/dingus
+
+blocks(Ctx, Acc, Result) -->
     empty_lines,
-    at_end, !.
+    block(Ctx, Block), !,
+    {
+        (   Acc = []
+        ->  Result = [Block|Blocks]
+        ;   acc_block(Acc, AccBlock),
+            Result = [AccBlock,Block|Blocks])
+    },
+    blocks(Ctx, [], Blocks).
 
-blocks([]) -->
-    at_end, !.
+blocks(Ctx, Acc, Blocks) -->
+    non_empty_line(Line), !,
+    blocks(Ctx, [Line|Acc], Blocks).
 
-blocks([Block|Blocks]) -->
-    block(Block), !,
+blocks(_, Acc, Result) -->
     empty_lines,
-    blocks(Blocks).
+    eos, !,
+    {
+        (   Acc = []
+        ->  Result = []
+        ;   Result = [Block],
+            acc_block(Acc, Block))
+    }.
 
-block(Block) -->
-    heading(Block).
+blocks(Ctx, Acc, Result) -->
+    empty_line,
+    {
+        (   Acc = []
+        ->  Result = Blocks
+        ;   Result = [Block|Blocks],
+            acc_block(Acc, Block))
+    },
+    blocks(Ctx, [], Blocks).
 
-block(Block) -->
-    blockquote(Block).
+% Converts lines into a <p>
+% element and applies span-level
+% parsing.
 
-block(Block) -->
-    horisontal_rule(Block).
+acc_block(Acc, p(Span)):-
+    reverse(Acc, AccLines),
+    merge_lines(AccLines, Block),
+    md_span_codes(Block, Span).
 
-block(Block) -->
-    list(Block).
+% Recognizes a single block.
+% Tries to parse in the following
+% order: headers, horisontal ruler,
+% lists, blockquote, html.
 
-block(Block) -->
+block(top, Block) -->
+    md_header(Block), !.
+
+block(top, Block) -->
+    hr(Block), !.
+
+block(_, Block) -->
+    list(Block), !.
+
+block(top, Block) -->
+    blockquote(Block), !.
+
+block(_, Block) -->
+    html(Block), !.
+
+block(top, Block) -->
     code(Block).
 
-block(Block) -->
-    html(Block).
+code(pre(code(Atom))) -->
+    indented_lines(Codes),
+    { atom_codes(Atom, Codes) }.
 
-block(Blob) -->
-    paragraph(Blob).
+% Optimizes generated HTML structure.
+% Applied after parsing different blocks.
+% Mostly deals with excessive <p> elements
+% removal.
 
-% Recognizes headings:
-% More info: http://daringfireball.net/projects/markdown/syntax#header
+optimize(blockquote([p(Block)]), blockquote(Block)):- !.
 
-heading(h1(Heading)) -->
-    two_line_heading(Text, Line),
-    { trim(Line, Trimmed), Line \= [], maplist('='(61), Trimmed) }, !,
-    { atom_codes(Heading, Text) }.
+optimize(li([p(Block)]), li(Block)):- !.
 
-heading(h2(Heading)) -->
-    two_line_heading(Text, Line),
-    { trim(Line, Trimmed), Line \= [], maplist('='(45), Trimmed) }, !,
-    { atom_codes(Heading, Text) }.
+optimize(li([p(Block1), ul(Block2)]), li(Block)):- !,
+    append(Block1, [ul(Block2)], Block).
 
-% Recognizes heading in the form "# Heading". Gives heading level (1-6)
-% and the heading content as an atom.
+optimize(li([p(Block1), ol(Block2)]), li(Block)):- !,
+    append(Block1, [ol(Block2)], Block).
 
-heading(Heading) -->
-    hash_heading_line(Text, Level), { Level >= 0 }, !,
-    { atomic_concat('h', Level, Name) },
-    { atom_codes(TextAtom, Text) },
-    { Heading =.. [ Name, TextAtom ] }.
+optimize(Block, Block).
 
-two_line_heading(Text, Line) -->
-    any(Text), ln, any(Line), (ln ; at_end), !.
+% Recognizes a sequence of one or more
+% indented lines. Gives back codes of
+% whole sequence.
 
-hash_heading_line(Text, Level) -->
-    white, hashes(Level), " ", white,
-    any(Text), white, hashes(_), (ln ; at_end), !.
+indented_lines(Codes) -->
+    indented_lines_collect(Lines),
+    {
+        Lines \= [],
+        merge_lines(Lines, Codes)
+    }.
 
-% Recognizes blockquote.
-% Can contain nested Markdown.
-% More info: http://daringfireball.net/projects/markdown/syntax#blockquote
+% Recognizes a sequence of indented lines.
+% There might be empty lines between
+% indented lines.
 
-blockquote(blockquote(Opt)) -->
-    "> ", any(Text), ((ln, white, ln) ; at_end), !,
-    { phrase(strip_bq(Stripped), Text, "") }, !,
-    { phrase(blocks(Quote), Stripped, []) },
-    { element_opt(Quote, Opt) }.
+indented_lines_collect([Line|Lines]) -->
+    indented_line(Line), !,
+    indented_lines_collect(Lines).
 
-% Strips blockquote start from blockquote text.
+indented_lines_collect([]) -->
+    eos, !.
 
-strip_bq([10|Text]) -->
-    ln, "> ", !, strip_bq(Text).
+indented_lines_collect([[]|Lines]) -->
+    empty_line, !,
+    indented_lines_collect(Lines).
 
-strip_bq([10|Text]) -->
-    ln, ">", !, strip_bq(Text).
+indented_lines_collect([]) --> "".
 
-strip_bq([Code|Text]) -->
-    [ Code ], !, strip_bq(Text).
-
-strip_bq([]) --> at_end.
-
-% Recognizes unordered list containing one or more items.
-% Items can contain nested Markdown.
-% More info: http://daringfireball.net/projects/markdown/syntax#list
-
-list(ul(Items)) -->
-    list_items(Items),
-    { length(Items, Len), Len > 0 }.
-
-list_items([Item|Items]) -->
-    list_item(Item), !,
-    list_items(Items).
-
-list_items([]) --> [].
-
-% Recognizes single line item.
-
-list_item(li(Opt)) -->
-    list_item_start, !,
-    any(Line), (ln ; at_end), !,
-    any(Text), list_item_end(Text), !,
-    { phrase(strip_indent(Stripped), Text, "") }, !,
-    { phrase(blocks(Blocks), Stripped, "") }, !,
-    { trim(Line, Trimmed) },
-    { list_item_fixup(Trimmed, Blocks, Item) },
-    { element_opt(Item, Opt) }.
-
-% List item start.
-
-list_item_start -->
-    white, [X], { memberchk(X, "*-+") }, " ", white.
-
-% Strips one indent level.
-
-strip_indent(Text) -->
-    strip_indent_begin(Text).
-
-strip_indent_begin(Text) -->
-    ("    " ; "\t"), !,
-    strip_indent_rest(Text).
-
-strip_indent_begin(Text) -->
-    strip_indent_rest(Text).
-
-strip_indent_rest([]) --> at_end, !.
-
-strip_indent_rest([10|Text]) -->
-    ln, ("    " ; "\t"), !,
-    strip_indent_rest(Text).
-
-strip_indent_rest([Code|Text]) -->
-    [ Code ], !, strip_indent_rest(Text).
-
-% Immediate begin of next list item. No optional space.
-
-list_item_end([]) -->
-    la([X,32]), { memberchk(X, "*-+") }, !.
-
-% Immediate begin of next list item. Optional space.
-
-list_item_end([]) -->
-    la([32,X,32]), { memberchk(X, "*-+") }, !.
-
-% Begin of next list item. No optional space.
-
-list_item_end(_) -->
-    ln, la([X,32]), { memberchk(X, "*-+") }, !.
-
-% Begin of next list item. Optional space.
-
-list_item_end(_) -->
-    ln, la([32,X,32]), { memberchk(X, "*-+") }, !.
-
-% End of stream.
-
-list_item_end(_) --> at_end, !.
-
-% At least one empty line following non-indented line.
-
-list_item_end(_) -->
-    empty_line, empty_lines, la([X]),
-    { \+ code_type(X, space) }.
-
-% Merge item line text with next paragraph.
-
-list_item_fixup(Text, Blocks, Item):-
-    Blocks = [p(Par)|Rest], !,
-    span_parse(Text, Spans),
-    append(Spans, ['\n'|Par], NewPar),
-    Item = [p(NewPar)|Rest].
-
-% Otherwise add as separated paragraph.
-
-list_item_fixup(Text, Blocks, Item):-
-    span_parse(Text, Spans),
-    Item = [p(Spans)|Blocks].
-
-%% element_opt(+Item, -Item) is det.
-%
-% Removes unnecessary p element from
-% element when the element contains only
-% the single p. Used for list items and blockquotes.
-
-element_opt([p(Spans)], Spans):- !.
-
-element_opt(Elem, Elem).
-
-% Recognizes a code block.
-
-code(pre(code(CodeAtom))) -->
-    (la("    ") ; la("\t")), !,
-    any(Code), code_block_end, !,
-    { phrase(strip_indent(Stripped), Code, "") }, !,
-    { atom_codes(CodeAtom, Stripped) }.
-
-% Ends at stream end.
-
-code_block_end --> at_end, !.
-
-% At least one empty line following non-indented line.
-
-code_block_end -->
-    empty_line, empty_lines, la([X]),
-    { \+ code_type(X, space) }.
+indented_line(Line) -->
+    indent, inline_string(Line), ln_or_eos.
 
 % Recognizes block-level HTML.
 % No Markdown inside it is processed.
+% Gives term that write_html's html//1
+% does not escape.
 
-html(\[HTMLAtom]) -->
-    la([60,Code]), { code_type(Code, alpha) }, !,
-    any(HTML), ((ln, white, ln) ; at_end), !,
-    { atom_codes(HTMLAtom, HTML) }.
+html(\[Atom]) -->
+    [0'<, Code], { code_type(Code, alpha) }, !,
+    non_empty_lines(Html),
+    { atom_codes(Atom, [0'<,Code|Html]) }.
 
-% Recognizes horisontal rules.
-% At least three * or - characters and might
-% have spaces between them.
+% Recognizes an horizontal ruler.
+% XXX might be a bit slow implementation?
 
-horisontal_rule(hr) -->
-    line(Line),
-    { exclude('='(32), Line, Clean) },
-    { Clean \= [] },
-    { maplist('='(42), Clean) ; maplist('='(45), Clean) }.
+hr(hr) -->
+    non_empty_line(Line),
+    {
+        exclude('='(0' ), Line, Clean),
+        Clean \= [],
+        (   maplist('='(0'*), Clean)
+        ;   maplist('='(0'-), Clean))
+    }.
 
-% Recognizes single line.
+% Recognizes either ordered list
+% or bulleted list.
 
-line(Line) -->
-    any(Line), (ln ; at_end), !.
+list(List) -->
+    bullet_list(List), !.
 
-% Recognizes single paragraph.
-% Parses block till first empty line or end.
-% Applies span-level parser.
+list(List) -->
+    ordered_list(List).
 
-paragraph(p(Spans)) -->
-    any(Text), ((ln, white, ln) ; at_end), !,
-    { span_parse(Text, Spans) }.
+% Recognizes ordered list.
+% Gives term like ol(Term)
+% where Items is non-empty list.
 
-% Recognizes all (zero or more) next empty lines.
+ordered_list(ol(Items)) -->
+    ordered_list_collect(Items), !,
+    { Items \= [] }.
 
-empty_lines -->
+ordered_list_collect([Item|Items]) -->
+    ordered_list_item(Item), !,
+    empty_lines,
+    ordered_list_collect(Items).
+
+ordered_list_collect([]) --> "".
+
+% Recognizes a single ordered list item.
+
+ordered_list_item(Opt) -->
+    md_ordered_list_item(Codes),
+    {
+        phrase(md_blocks(list, Blocks), Codes),
+        optimize(li(Blocks), Opt)
+    }.
+
+% Recognizes bulleted list.
+% Gives a term like ul(Items)
+% where Items is non-empty list.
+
+bullet_list(ul(Items)) -->
+    bullet_list_collect(Items), !,
+    { Items \= [] }.
+
+bullet_list_collect([Item|Items]) -->
+    bullet_list_item(Item), !,
+    empty_lines,
+    bullet_list_collect(Items).
+
+bullet_list_collect([]) --> "".
+
+% Recognizes a single bulleted list item.
+
+bullet_list_item(Opt) -->
+    md_bullet_list_item(Codes),
+    {
+        phrase(md_blocks(list, Blocks), Codes),
+        optimize(li(Blocks), Opt)
+    }.
+
+% Recognizes a blockquote.
+% Strips > from line beginnings.
+% Output is a term like blockquote(Blocks).
+
+blockquote(Opt) -->
+    ">", string(Codes),
+    empty_line,
     empty_line, !,
-    empty_lines.
+    {
+        trim_left(Codes, Trimmed),
+        phrase(bq_strip(Stripped), Trimmed), !,
+        phrase(md_blocks(top, Blocks), Stripped),
+        optimize(blockquote(Blocks), Opt)
+    }.
 
-empty_lines --> [].
+% Strips > from blockquote line
+% beginnings.
 
-% Recognizes empty line.
+bq_strip([0'\n|Codes]) -->
+    ln, "> ", !, bq_strip(Codes).
 
-empty_line --> white, ln.
+bq_strip([0'\n|Codes]) -->
+    ln, ">", !, bq_strip(Codes).
 
-% Consumes as many hash codes as possible.
+bq_strip([Code|Codes]) -->
+    [Code], !, bq_strip(Codes).
 
-hashes(Count) -->
-    "#", !, hashes(CountNext),
-    { Count is CountNext + 1 }.
+bq_strip([]) -->
+    eos.
 
-hashes(0) --> [].
+% List of consequtive non-empty lines.
+% Consumes as many non-empty lines
+% as possible. Gives flattened list
+% of codes.
 
-% Consumes as many whitespace (space, tab)
-% codes as possible.
+non_empty_lines(Codes) -->
+    non_empty_lines_collect(Lines),
+    { merge_lines(Lines, Codes) }, !.
 
-white -->
-    [ Code ], { code_type(Code, white) },
-    !, white.
+non_empty_lines_collect([Line|Lines]) -->
+    non_empty_line(Line), !,
+    non_empty_lines_collect(Lines).
 
-white --> [].
-
-ln --> "\r\n", !.
-ln --> "\n", !.
-ln --> "\r".
+non_empty_lines_collect([]) --> "".
