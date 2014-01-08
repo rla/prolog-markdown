@@ -1,21 +1,41 @@
 :- module(md_span, [
-    span_parse/2
+    md_span_codes/2,
+    md_span_string/2
 ]).
 
+/** <module> Span-level Markdown parser
+
+Parses span-level Markdown elements: emphasis,
+inline-code, links and others. More info:
+http://daringfireball.net/projects/markdown/syntax#span
+*/
+
+:- use_module(library(dcg/basics)).
 :- use_module(library(apply)).
-:- use_module(library(md/md_dcg)).
-:- use_module(library(md/md_trim)).
 
-% FIXME no HTML in spans?
+:- use_module(md_trim).
+:- use_module(md_links).
+:- use_module(md_span_link).
+:- use_module(md_escape).
+:- use_module(md_line).
 
-%% span_parse(+Text:codes, -Out:list) is det.
+%% md_span_string(+String, -Out) is det.
+%
+% Same as md_span_codes/2 but uses a string
+% ans input.
+
+md_span_string(String, Out):-
+    string_codes(String, Codes),
+    md_span_codes(Codes, Out).
+
+%% md_span_codes(+Codes, -Out) is det.
 %
 % Turns the list of codes into a structure acceptable
 % by SWI-Prolog's html//1 predicate. More info:
 % http://www.swi-prolog.org/pldoc/doc_for?object=html/1
 
-span_parse(Codes, Out):-
-    phrase(span(Spans), Codes, []), !,
+md_span_codes(Codes, Out):-
+    phrase(span(Spans), Codes), !,
     atoms(Spans, Out).
 
 % Escape sequences.
@@ -23,21 +43,25 @@ span_parse(Codes, Out):-
 % http://daringfireball.net/projects/markdown/syntax#backslash
 % Processed first.
 
-span([Char|Spans]) -->
-    "\\", [ Code ],
-    { memberchk(Code, "\\`*_{}[]()#+-.!") }, !,
-    { atom_codes(Char, [ Code ]) },
+span([Atom|Spans]) -->
+    "\\", [Code],
+    {
+        md_escaped_code(Code),
+        atom_codes(Atom, [Code])
+    }, !,
     span(Spans).
 
 % Entities. These must be left alone.
 % More info:
 % http://daringfireball.net/projects/markdown/syntax#autoescape
 
-span([\[EntityAtom]|Spans]) -->
-    "&", any(Codes, 10), ";",
-    { maplist(alnum, Codes) }, !,
-    { flatten(["&", Codes, ";"], Entity) },
-    { atom_codes(EntityAtom, Entity) },
+span([\[Atom]|Spans]) -->
+    "&", string_limit(Codes, 10), ";",
+    {
+        maplist(alnum, Codes), !,
+        append([0'&|Codes], [0';], Entity),
+        atom_codes(Atom, Entity)
+    },
     span(Spans).
 
 % Special characters & and <.
@@ -53,146 +77,97 @@ span(['&'|Spans]) -->
 
 span(['<'|Spans]) -->
     "<", lookahead(Code),
-    { \+ code_type(Code, alpha), Code \= 47 }, !,
+    {
+        \+ code_type(Code, alpha),
+        Code \= 47
+    }, !,
     span(Spans).
 
 span(['<']) -->
-    "<", at_end, !.
+    "<", eos, !.
 
-% Recognizes an inline link.
-% More info:
-% http://daringfireball.net/projects/markdown/syntax#link
+% Recognizes links and images.
 
 span([Link|Spans]) -->
-    link_label(Label),
-    link_url_title(Url, Title), !,
-    { atom_codes(UrlAtom, Url) },
-    { atom_codes(TitleAtom, Title) },
-    { atom_codes(LabelAtom, Label) },
-    { link(UrlAtom, TitleAtom, LabelAtom, Link) },
+    md_span_link(Link), !,
     span(Spans).
 
 % Recognizes <script ... </script>.
 % Protects script contents from being processed as Markdown.
 
-span([\[ScriptAtom]|Spans]) -->
-    "<script", any(Codes), "</script>", !,
-    { flatten(["<script", Codes, "</script>"], Script) },
-    { atom_codes(ScriptAtom, Script) },
-    span(Spans).
-
-% Recognizes inline automatic http <link>.
-
-span([Link|Spans]) -->
-    "<http", any(Codes), ">", !,
-    { append("http", Codes, Url) },
-    { atom_codes(UrlAtom, Url) },
-    { link(UrlAtom, '', UrlAtom, Link) },
-    span(Spans).
-
-% Recognizes inline mail link <address@example.com>
-
-span([Link|Spans]) -->
-    "<", any(User), "@", any(Host), ">", !,
-    { flatten([User, "@", Host], Address) },
-    { mail_link(Address, Link) },
+span([\[Atom]|Spans]) -->
+    "<script", string(Codes), "</script>", !,
+    {
+        atom_codes(Content, Codes),
+        atomic_list_concat(['<script', Content, '</script>'], Atom)
+    },
     span(Spans).
 
 % Recognizes strong **something**.
 % No nesting.
 
-span([strong(HTML)|Spans]) -->
-    "**", any(Strong), "**", !,
-    { span_atom(Strong, HTML) },
+span([strong(Html)|Spans]) -->
+    "**", string(Strong), "**", !,
+    { span_atom(Strong, Html) },
     span(Spans).
 
 % Recognizes strong __something__.
 % No nesting.
 
-span([strong(HTML)|Spans]) -->
-    "__", any(Strong), "__", !,
-    { span_atom(Strong, HTML) },
+span([strong(Html)|Spans]) -->
+    "__", string(Strong), "__", !,
+    { span_atom(Strong, Html) },
     span(Spans).
 
 % Recognizes emhasis *something*.
 % The first character following * must be a non-space.
 
-span([em(HTML)|Spans]) -->
-    "*", non_space(Code), any(Emph), "*", !,
-    { span_atom([Code|Emph], HTML) },
+span([em(Html)|Spans]) -->
+    "*", nonblank(Code), string(Emph), "*", !,
+    { span_atom([Code|Emph], Html) },
     span(Spans).
 
 % Recognizes emphasis _something_.
 % The first character following _ must be a non-space.
 
-span([em(HTML)|Spans]) -->
-    "_", non_space(Code), any(Emph), "_", !,
-    { span_atom([Code|Emph], HTML) },
+span([em(Html)|Spans]) -->
+    "_", nonblank(Code), string(Emph), "_", !,
+    { span_atom([Code|Emph], Html) },
     span(Spans).
 
 % Recognizes inline code ``code``.
 
 span([code(Atom)|Spans]) -->
-    "``", any(Raw), "``", !,
-    { trim(Raw, Trimmed) },
-    { atom_codes(Atom, Trimmed) },
+    "``", string(Raw), "``", !,
+    {
+        trim(Raw, Trimmed),
+        atom_codes(Atom, Trimmed)
+    },
     span(Spans).
 
 % Recognizes inline code `code`.
 
 span([code(Atom)|Spans]) -->
-    "`", any(Raw), "`", !,
-    { trim(Raw, Trimmed) },
-    { atom_codes(Atom, Trimmed) },
-    span(Spans).
-
-% Recognizes image link ![Alt text](/path/to/img.jpg).
-% With optional title: ![Alt text](/path/to/img.jpg "Optional title").
-
-span([image(Url, Alt, Title)|Spans]) -->
-    "!", link_label(Alt),
-    link_url_title(Url, Title), !,
+    "`", string(Raw), "`", !,
+    {
+        trim(Raw, Trimmed),
+        atom_codes(Atom, Trimmed)
+    },
     span(Spans).
 
 span([Code|Spans]) -->
-    [ Code ], !,
+    [Code], !,
     span(Spans).
 
 span([]) -->
-    at_end.
+    eos.
 
-%% link(+Url:atom, +Title:atom, +Label:atom, -Element) is det.
-%
-% Creates an HTML link element. Has no title attribute when
-% title is empty.
-
-link(Url, '', Label, Element):- !,
-    Element = a([href=Url], Label).
-
-link(Url, Title, Label, Element):-
-    Element = a([href=Url, title=Title], Label).
-
-%% mail_link(+Address:codes, -Element) is det.
-%
-% Created HTML link element for an email address.
-% FIXME use special encoding.
-
-mail_link(Address, Element):-
-    append("mailto:", Address, Href),
-    atom_codes(HrefAtom, Href),
-    atom_codes(AddressAtom, Address),
-    Element = a([href=HrefAtom], AddressAtom).
-
-%% span_atom(+Codes:list, -HTML:term) is det.
-%
 % Turns a list of codes into an HTML term
 % than can contain embedded HTML.
 
 span_atom(Codes, \[Atom]):-
     atom_codes(Atom, Codes).
 
-%% atoms(+In:list, -Out:html) is det.
-%
 % Collects remaining codes into atoms suitable
 % for SWI-s html//1.
 % Atoms will appear as \[text] as they can contain
@@ -223,21 +198,8 @@ atoms([Token|In], Acc, [\[Atom],Token|Out]):-
     atom_codes(Atom, Rev),
     atoms(In, [], Out).
 
-% Recognizes single non-space code.
-
-non_space(Code) -->
-    [ Code ], { \+ code_type(Code, space) }.
-
-link_label(Label) -->
-    "[", any(Label), "]", !.
-
-% 32 - space, 34 - ", 41 - ).
-
-link_url_title(Url, Title) -->
-    "(", any(Url), [32,34], any(Title), [34,41], !.
-
-link_url_title(Url, "") -->
-    "(", any(Url), ")", !.
+% Recognizes single symbol code of
+% type alnum.
 
 alnum(Code):-
     code_type(Code, alnum).
