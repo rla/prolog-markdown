@@ -27,11 +27,11 @@ Convert into HTML atom:
 
 ## TODO
 
-* Reference links
 * Allow single quotes for inline link title
-* Ordered lists
 * Line break rule with spaces
 * GitHub-flavoured code blocks
+* Sublist with less than 4-space indent
+* Horisontal ruler ending a list item
 
 ## License (The MIT License)
 

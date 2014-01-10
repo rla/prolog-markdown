@@ -106,7 +106,7 @@ block(top, Block) -->
 block(_, Block) -->
     html(Block), !.
 
-block(top, Block) -->
+block(_, Block) -->
     code(Block).
 
 code(pre(code(Atom))) -->
