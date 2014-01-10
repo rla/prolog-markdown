@@ -86,6 +86,14 @@ span(['<'|Spans]) -->
 span(['<']) -->
     "<", eos, !.
 
+% Line break with two or more spaces.
+% More info:
+% http://daringfireball.net/projects/markdown/syntax#p
+
+span([br([])|Spans]) -->
+    "  ", whites, ln, !,
+    span(Spans).
+
 % Recognizes links and images.
 
 span([Link|Spans]) -->

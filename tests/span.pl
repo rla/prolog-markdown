@@ -85,4 +85,7 @@ test(script):-
 test(script_markdown):-
     md_span_string("<script>var x = 1*2*3;</script>", [\['<script>var x = 1*2*3;</script>']]). % contains emphasis *2*.
 
+test(line_break):-
+    md_span_string("abc  \ndef", [\[abc],br([]),\[def]]).
+
 :- end_tests(md_span).
