@@ -135,7 +135,15 @@ label(Label) -->
 
 url_title(Url, Title) -->
     "(", inline_string(UrlCodes),
-    whites, "\"", inline_string(TitleCodes), whites, "\")", !,
+    whites, "\"", inline_string(TitleCodes), "\"", whites, ")", !,
+    {
+        atom_codes(Url, UrlCodes),
+        atom_codes(Title, TitleCodes)
+    }.
+
+url_title(Url, Title) -->
+    "(", inline_string(UrlCodes),
+    whites, "'", inline_string(TitleCodes), "'", whites, ")", !,
     {
         atom_codes(Url, UrlCodes),
         atom_codes(Title, TitleCodes)

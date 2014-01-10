@@ -27,7 +27,6 @@ Convert into HTML atom:
 
 ## TODO
 
-* Allow single quotes for inline link title
 * Line break rule with spaces
 * GitHub-flavoured code blocks
 * Sublist with less than 4-space indent

@@ -109,4 +109,10 @@ test(span_link_14):-
     md_span_link_string("![Photo][i] def",
         img([src='http://example.com/photo.jpg', alt='Photo']), " def").
 
+% Tests a normal link, delimited with single quotes.
+
+test(span_link_15):-
+    md_span_link_string("[abc](http://example.com 'Title') def",
+        a([href='http://example.com', title='Title'], abc), " def").
+
 :- end_tests(md_span_links).
