@@ -2,7 +2,7 @@
 :- use_module(prolog/md/md_parse).
 
 test(file):-
-    md_parse_file('data/file.md', Blocks),
+    md_parse_file('tests/file.md', Blocks),
     assertion(nth0(0, Blocks, h1('Test file'))),
     assertion(nth0(1, Blocks, blockquote([\[_]]))),
     assertion(nth0(2, Blocks, h2('Headings'))),
