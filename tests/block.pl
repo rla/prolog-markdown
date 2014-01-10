@@ -49,12 +49,12 @@ test(list_2):-
 
 test(list_3):-
     md_parse_string("+ a\n    b", [ul([
-        li([\['a\n    b']])
+        li([\['a\nb']])
     ])]).
 
 test(list_4):-
     md_parse_string("+  a\n    b", [ul([
-        li([\['a\n    b']])
+        li([\['a\nb']])
     ])]).
 
 test(list_5):-

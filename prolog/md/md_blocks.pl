@@ -197,48 +197,65 @@ list(List) -->
 % where Items is non-empty list.
 
 ordered_list(ol(Items)) -->
-    ordered_list_collect(Items), !,
+    ordered_list_collect(Items, _), !,
     { Items \= [] }.
 
-ordered_list_collect([Item|Items]) -->
-    ordered_list_item(Item), !,
+ordered_list_collect([Item|Items], Mode) -->
+    ordered_list_item(Item, Mode), !,
     empty_lines,
-    ordered_list_collect(Items).
+    ordered_list_collect(Items, Mode).
 
-ordered_list_collect([]) --> "".
+ordered_list_collect([], _) --> "".
 
 % Recognizes a single ordered list item.
 
-ordered_list_item(Opt) -->
-    md_ordered_list_item(Codes),
-    {
-        phrase(md_blocks(list, Blocks), Codes),
-        optimize(li(Blocks), Opt)
-    }.
+ordered_list_item(Item, ListMode) -->
+    md_ordered_list_item(Codes, ItemMode),
+    { postproc_list_item(Codes, ItemMode, ListMode, Item) }.
 
 % Recognizes bulleted list.
 % Gives a term like ul(Items)
 % where Items is non-empty list.
 
 bullet_list(ul(Items)) -->
-    bullet_list_collect(Items), !,
+    bullet_list_collect(Items, _), !,
     { Items \= [] }.
 
-bullet_list_collect([Item|Items]) -->
-    bullet_list_item(Item), !,
+bullet_list_collect([Item|Items], Mode) -->
+    bullet_list_item(Item, Mode), !,
     empty_lines,
-    bullet_list_collect(Items).
+    bullet_list_collect(Items, Mode).
 
-bullet_list_collect([]) --> "".
+bullet_list_collect([], _) --> "".
 
 % Recognizes a single bulleted list item.
 
-bullet_list_item(Opt) -->
-    md_bullet_list_item(Codes),
-    {
-        phrase(md_blocks(list, Blocks), Codes),
-        optimize(li(Blocks), Opt)
-    }.
+bullet_list_item(Item, ListMode) -->
+    md_bullet_list_item(Codes, ItemMode),
+    { postproc_list_item(Codes, ItemMode, ListMode, Item) }.
+
+% Postprocesses a list item.
+% In paragraph mode, no optimizations are
+% applied (preserves `<p>` in `<li>`).
+% The actual list mode is set by the first
+% list item.
+
+postproc_list_item(Codes, ItemMode, ListMode, Item):-
+    phrase(md_blocks(list, Blocks), Codes),
+    list_mode(ListMode, ItemMode, Mode),
+    (   Mode = normal
+    ->  optimize(li(Blocks), Item)
+    ;   Item = li(Blocks)).
+
+% List mode setup. When ListMode
+% is set, its value is used. Otherwise
+% ListMode is set to ItemMode.
+
+list_mode(ListMode, ItemMode, Mode):-
+    (   var(ListMode)
+    ->  ListMode = ItemMode
+    ;   true),
+    Mode = ListMode.
 
 % Recognizes a blockquote.
 % Strips > from line beginnings.
