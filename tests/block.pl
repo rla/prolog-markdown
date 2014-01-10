@@ -3,20 +3,54 @@
 
 % Tests for block-level parser.
 
+% Setext-styled first-level heading.
+
 test(heading_1):-
     md_parse_string("abc\n===", [h1(abc)]).
+
+% Setext-styled second-level heading.
 
 test(heading_2):-
     md_parse_string("abc\n---", [h2(abc)]).
 
+% Atx-styled first-level heading.
+
 test(heading_3):-
     md_parse_string("# abc", [h1(abc)]).
+
+% Atx-styled second-level heading.
 
 test(heading_4):-
     md_parse_string("## abc", [h2(abc)]).
 
+% Atx-styled first-level heading. # at end.
+
 test(heading_5):-
     md_parse_string("# abc #", [h1(abc)]).
+
+% Setext-styled first-level heading following a paragraph.
+% With empty line.
+
+test(heading_6):-
+    md_parse_string("para\n\nabc\n===", [p([\[para]]), h1(abc)]).
+
+% Setext-styled first-level heading following a paragraph.
+% Without empty line.
+
+test(heading_7):-
+    md_parse_string("para\nabc\n===", [p([\[para]]), h1(abc)]).
+
+% Setext-styled first-level heading following a list.
+% With empty line.
+
+test(heading_8):-
+    md_parse_string("* item\n\nabc\n===", [ul([li([\[item]])]), h1(abc)]).
+
+% Setext-styled first-level heading following a list.
+% Without empty line.
+
+test(heading_9):-
+    md_parse_string("* item\nabc\n===", [ul([li([p([\[item]]), h1(abc)])])]).
 
 test(blockquote_1):-
     md_parse_string("> abc", [blockquote([\[abc]])]).

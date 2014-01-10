@@ -91,7 +91,7 @@ acc_block(Acc, p(Span)):-
 % order: headers, horisontal ruler,
 % lists, blockquote, html.
 
-block(top, Block) -->
+block(_, Block) -->
     md_header(Block), !.
 
 block(top, Block) -->
