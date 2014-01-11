@@ -17,34 +17,34 @@ test(preserve_html):-
     md_span_string("abc<em>1</em>", [\['abc<em>1</em>']]).
 
 test(strong):-
-    md_span_string("**abc**", [strong(\[abc])]).
+    md_span_string("**abc**", [strong([\[abc]])]).
 
 test(strong_in_text):-
-    md_span_string("abc **def** ghi", [\['abc '],strong(\[def]),\[' ghi']]).
+    md_span_string("abc **def** ghi", [\['abc '],strong([\[def]]),\[' ghi']]).
 
 test(strong_emb_html):-
-    md_span_string("**abc<a>anchor</a>**", [strong(\['abc<a>anchor</a>'])]).
+    md_span_string("**abc<a>anchor</a>**", [strong([\['abc<a>anchor</a>']])]).
 
 test(strong_underscore):-
-    md_span_string("__abc__", [strong(\[abc])]).
+    md_span_string("__abc__", [strong([\[abc]])]).
 
 test(strong_nonest):-
-    md_span_string("**__abc__**", [strong(\['__abc__'])]).
+    md_span_string("**__abc__**", [strong([em([\['_abc']]), \['_']])]).
 
 test(strong_space):-
-    md_span_string("** abc**", [strong(\[' abc'])]).
+    md_span_string("** abc**", [strong([\[' abc']])]).
 
 test(strong_space_underscore):-
-    md_span_string("__ abc__", [strong(\[' abc'])]).
+    md_span_string("__ abc__", [strong([\[' abc']])]).
 
 test(emphasis):-
-    md_span_string("*abc*", [em(\[abc])]).
+    md_span_string("*abc*", [em([\[abc]])]).
 
 test(emphasis_escape):-
     md_span_string("abc \\*def\\* ghi", [\['abc '], '*', \['def'], '*', \[' ghi']]).
 
 test(emphasis_underscore):-
-    md_span_string("_abc_", [em(\[abc])]).
+    md_span_string("_abc_", [em([\[abc]])]).
 
 test(no_emphasis):-
     md_span_string("* abc*", [\['* abc*']]).
@@ -90,5 +90,11 @@ test(line_break):-
 
 test(no_inline_emphasis):-
     md_span_string("abc_def_ghi", [\[abc_def_ghi]]).
+
+test(link_in_strong):-
+    md_span_string("**[label](http://google.com)**", [strong([a([href='http://google.com'], label)])]).
+
+test(strong_in_emphasis):-
+    md_span_string("_**abc**_", [em([strong([\[abc]])])]).
 
 :- end_tests(md_span).

@@ -36,10 +36,11 @@ md_span_string(String, Out):-
 % http://www.swi-prolog.org/pldoc/doc_for?object=html/1
 
 md_span_codes(Codes, Out):-
-    phrase(span(Spans, [strong, em, code]), Codes), !,
-    atoms(Spans, Out).
+    md_span_codes(Codes, [strong, em, code], Out).
 
-% FIXME begin rules.
+md_span_codes(Codes, Allow, Out):-
+    phrase(span(Spans, Allow), Codes), !,
+    atoms(Spans, Out).
 
 % Escape sequences.
 % More info:
@@ -130,14 +131,16 @@ span([Code, 0'_|Spans], Allow) -->
 % Recognizes text stylings like
 % strong, emphasis and inline code.
 
-span([Result|Spans], Allow) -->
-    md_span_decorate(Span, Allow), !,
+span([Span|Spans], Allow) -->
+    md_span_decorate(Dec, Allow), !,
     {
-        Span =.. [Name, Codes],
+        Dec =.. [Name, Codes],
         (   Name = code
-        ->  atom_codes(Atom, Codes)
-        ;   span_atom(Codes, Atom)),
-        Result =.. [Name, Atom]
+        ->  atom_codes(Atom, Codes),
+            Span =.. [Name, Atom]
+        ;   select(Name, Allow, AllowNest),
+            md_span_codes(Codes, AllowNest, Nested),
+            Span =.. [Name, Nested])
     },
     span(Spans, Allow).
 

@@ -47,8 +47,6 @@ md_span_decorate(Span, Allow) -->
     { memberchk(code, Allow) },
     code(Span).
 
-% FIXME recognize in-word _
-
 % Recognizes strong **something**.
 % No nesting.
 

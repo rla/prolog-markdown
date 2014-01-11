@@ -40,7 +40,6 @@ Requires SWI-Prolog 7.x.
  * Sublist with less than 4-space indent
  * Horisontal ruler ending a list item
  * Strikethrough
- * Test inword underscores
  * Link recognition
 
 ## License
