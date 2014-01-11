@@ -24,9 +24,9 @@ Convert into an HTML atom:
 ## Deviations from the Gruber's Markdown
 
  * Various cases for tight markup (no separate lines between blocks).
- * No special encoding for mail addresses. I think that would confuse
-   very few bots.
+ * No special encoding for mail addresses.
  * Line break rule creates `<br>` not `<br />`.
+ * No in-word emphasis with underscores.
 
 ## Installation
 
@@ -39,6 +39,9 @@ Requires SWI-Prolog 7.x.
  * GitHub-flavoured code blocks
  * Sublist with less than 4-space indent
  * Horisontal ruler ending a list item
+ * Strikethrough
+ * Test inword underscores
+ * Link recognition
 
 ## License
 

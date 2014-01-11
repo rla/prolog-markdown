@@ -88,4 +88,7 @@ test(script_markdown):-
 test(line_break):-
     md_span_string("abc  \ndef", [\[abc],br([]),\[def]]).
 
+test(no_inline_emphasis):-
+    md_span_string("abc_def_ghi", [\[abc_def_ghi]]).
+
 :- end_tests(md_span).
