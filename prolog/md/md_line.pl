@@ -1,15 +1,16 @@
 :- module(md_line, [
-    merge_lines/2,     % +Lines, -Codes
+    merge_lines/2,               % +Lines, -Codes
     indent//0,
-    non_empty_line//1, % -Codes
+    non_empty_line//1,           % -Codes
+    lookahead_non_empty_line//1, % -Codes
     discard_to_line_end//0,
     empty_lines//0,
     empty_line//0,
-    inline_string//1,  % -Codes
+    inline_string//1,            % -Codes
     ln_or_eos//0,
     ln//0,
-    string_limit//2,   % -Codes, +Limit
-    lookahead//1,      % ?Code
+    string_limit//2,             % -Codes, +Limit
+    lookahead//1,                % ?Code
     lookahead_ln//0,
     lookahead_ln_or_eos//0
 ]).
@@ -41,6 +42,15 @@ merge_lines([Line|Lines], Codes):-
 
 indent --> "\t".
 indent --> "    ".
+
+%% lookahead_non_empty_line(-Codes)// is semidet.
+%
+% Looks head a non-empty line. The line might
+% end with a line end or the `eos`.
+
+lookahead_non_empty_line(Codes), Codes -->
+    inline_string(Codes), lookahead_ln_or_eos,
+    { Codes \= [] }, !.
 
 %% non_empty_line(-Codes)// is semidet.
 %

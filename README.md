@@ -40,7 +40,6 @@ Requires SWI-Prolog 7.x.
 
 ## TODO
 
- * Horisontal ruler ending a list item
  * Fenced code block ends a list item
 
 ## License

@@ -267,4 +267,13 @@ test(fenced_code_no_language):-
 test(fenced_code):-
     md_parse_string("```prolog\nabc\n```", [pre(code(['data-language'=prolog], abc))]).
 
+test(hr_after_list_1):-
+    md_parse_string("* abc\n* * *\nrest", [ul([li([\[abc]])]), hr, p([\[rest]])]).
+
+% Horizontal ruler deeply nested.
+% XXX hr is not placed inside list item.
+
+test(hr_after_list_2):-
+    md_parse_string("* abc\n           * * *", [ul([li([\[abc]])]), hr]).
+
 :- end_tests(md_block).

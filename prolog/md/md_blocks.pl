@@ -16,6 +16,7 @@ Applies span-level parsing for all blocks.
 :- use_module(md_span).
 :- use_module(md_trim).
 :- use_module(md_line).
+:- use_module(md_hr).
 
 %! md_blocks(-Blocks)// is det.
 %
@@ -94,8 +95,8 @@ acc_block(Acc, p(Span)):-
 block(_, Block) -->
     md_header(Block), !.
 
-block(top, Block) -->
-    hr(Block), !.
+block(top, hr) -->
+    md_hr, !.
 
 block(_, Block) -->
     list(Block), !.
@@ -191,18 +192,6 @@ html(\[Atom]) -->
     [0'<, Code], { code_type(Code, alpha) }, !,
     non_empty_lines(Html),
     { atom_codes(Atom, [0'<,Code|Html]) }.
-
-% Recognizes an horizontal ruler.
-% XXX might be a bit slow implementation?
-
-hr(hr) -->
-    non_empty_line(Line),
-    {
-        exclude('='(0' ), Line, Clean),
-        Clean \= [],
-        (   maplist('='(0'*), Clean)
-        ;   maplist('='(0'-), Clean))
-    }.
 
 % Recognizes either ordered list
 % or bulleted list.

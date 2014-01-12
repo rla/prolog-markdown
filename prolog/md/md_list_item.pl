@@ -11,14 +11,20 @@ Separated into its own module for code clarity.
 
 :- use_module(library(dcg/basics)).
 :- use_module(md_line).
+:- use_module(md_hr).
 
 %% md_bullet_list_item(+Codes, -Mode)// is det.
 %
 % Recognizes a single bulleted list item.
 
+% Lookahead for horisontal ruler prevents
+% recognizing * * * as a list item.
+
 md_bullet_list_item(Codes, Mode) -->
-    bullet_start(_), whites, !,
-    list_item_unintented(Codes, Mode).
+    (   md_lookahead_hr
+    ->  { fail }
+    ;   bullet_start(_), whites, !,
+        list_item_unintented(Codes, Mode)).
 
 %% md_ordered_list_item(-Codes, -Mode)// is det.
 %
@@ -110,6 +116,11 @@ list_item_end(para) -->
 
 list_item_end(normal) -->
     ln, lookahead_item_start.
+
+% Next line is horisontal ruler.
+
+list_item_end(normal) -->
+    ln, md_lookahead_hr.
 
 % Empty line and next line has
 % no indent.
