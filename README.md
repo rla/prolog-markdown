@@ -28,7 +28,8 @@ Convert into an HTML atom:
  * Line break rule creates `<br>` not `<br />`.
  * No in-word emphasis with underscores.
  * Strikethrough as `~~text~~`.
- * Added escape sequence `\~`.
+ * Added escape sequences `\~`, `` \` ``.
+ * Github-styled fenced code blocks (<https://help.github.com/articles/github-flavored-markdown>).
 
 ## Installation
 
@@ -38,9 +39,8 @@ Requires SWI-Prolog 7.x.
 
 ## TODO
 
- * GitHub-flavoured code blocks
- * Sublist with less than 4-space indent
  * Horisontal ruler ending a list item
+ * Fenced code block ends a list item
  * Link recognition
 
 ## License

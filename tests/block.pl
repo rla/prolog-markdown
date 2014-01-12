@@ -257,4 +257,14 @@ test(horisontal_rule_3):-
 test(block):-
     md_parse_string("<div>abc</div>", [\['<div>abc</div>']]).
 
+% Fenced code block, no language.
+
+test(fenced_code_no_language):-
+    md_parse_string("```\nabc\n```", [pre(code(abc))]).
+
+% Fenced code block, with language.
+
+test(fenced_code):-
+    md_parse_string("```prolog\nabc\n```", [pre(code(['data-language'=prolog], abc))]).
+
 :- end_tests(md_block).

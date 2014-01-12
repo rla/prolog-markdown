@@ -17,7 +17,7 @@ Applies span-level parsing for all blocks.
 :- use_module(md_trim).
 :- use_module(md_line).
 
-%% md_blocks(-Blocks)// is det.
+%! md_blocks(-Blocks)// is det.
 %
 % Parses given Markdown into a structure
 % accepted by html//1.
@@ -107,11 +107,32 @@ block(_, Block) -->
     html(Block), !.
 
 block(_, Block) -->
-    code(Block).
+    code(Block), !.
+
+block(_, Block) -->
+    fenced_code(Block).
 
 code(pre(code(Atom))) -->
-    indented_lines(Codes),
+    indented_lines(Codes), !,
     { atom_codes(Atom, Codes) }.
+
+% Recognizes fenced code blocks.
+% The language is put into the
+% `data-language` attribute of the
+% `code` tag.
+
+fenced_code(Block) -->
+    "```", inline_string(LangCodes), ln,
+    string(Codes),
+    ln, "```", whites, ln_or_eos, !,
+    {
+        trim(LangCodes, Trimmed),
+        atom_codes(Lang, Trimmed),
+        atom_codes(Code, Codes),
+        (   Lang = ''
+        ->  Block = pre(code(Code))
+        ;   Block = pre(code(['data-language'=Lang], Code)))
+    }.
 
 % Optimizes generated HTML structure.
 % Applied after parsing different blocks.
