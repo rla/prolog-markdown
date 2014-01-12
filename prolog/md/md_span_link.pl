@@ -17,9 +17,9 @@ from the `md_span` module for code clarity.
 %
 % Recognizes different types of
 % links from the stream of symbol codes.
-% Throws error(no_reference(Id)) when a
-% reference link is used that has no such
-% reference defined.
+
+md_span_link(Link) -->
+    plain_http_link(Link), !.
 
 md_span_link(Link) -->
     angular_link(Link), !.
@@ -39,10 +39,33 @@ md_span_link(Image) -->
 md_span_link(Image) -->
     image(Image).
 
+% Recognizes a plain link.
+
+plain_http_link(Link) -->
+    http_prefix(Prefix), inline_string(Codes), link_end,
+    {
+        atom_codes(Atom, Codes),
+        atom_concat(Prefix, Atom, Url),
+        link(Url, '', Url, Link)
+    }.
+
+link_end -->
+    eos, !.
+
+link_end -->
+    lookahead(Code),
+    { code_type(Code, space) }.
+
+http_prefix('http://') -->
+    "http://".
+
+http_prefix('https://') -->
+    "https://".
+
 % Recognizes inline automatic http <link>.
 
 angular_link(Link) -->
-    "<http", inline_string(Codes), ">", !,
+    "<http", inline_string(Codes), ">",
     {
         atom_codes(Atom, Codes),
         atom_concat(http, Atom, Url),
@@ -53,7 +76,7 @@ angular_link(Link) -->
 
 angular_mail_link(Link) -->
     "<", inline_string(User),
-    "@", inline_string(Host), ">", !,
+    "@", inline_string(Host), ">",
     {
         append(User, [0'@|Host], Codes),
         atom_codes(Address, Codes),
@@ -67,7 +90,7 @@ angular_mail_link(Link) -->
 
 normal_link(Link) -->
     label(Label),
-    url_title(Url, Title), !,
+    url_title(Url, Title),
     { link(Url, Title, Label, Link) }.
 
 % Recognizes image ![Alt text](/path/to/img.jpg).
@@ -76,7 +99,7 @@ normal_link(Link) -->
 
 image(Image) -->
     "!", label(Alt),
-    url_title(Url, Title), !,
+    url_title(Url, Title),
     {
         (   Title = ''
         ->  Image = img([src=Url, alt=Alt])

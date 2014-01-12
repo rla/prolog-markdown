@@ -2,7 +2,6 @@
 
 Markdown parser implemented in Prolog. Compatible with [SWI-Prolog](http://www.swi-prolog.org/) as the
 output tree is for direct use by [html/1](http://www.swi-prolog.org/pldoc/doc_for?object=html/1).
-
 The specification for the parser was taken from
 <http://daringfireball.net/projects/markdown/syntax> (Gruber's Markdown).
 
@@ -28,8 +27,10 @@ Convert into an HTML atom:
  * Line break rule creates `<br>` not `<br />`.
  * No in-word emphasis with underscores.
  * Strikethrough as `~~text~~`.
- * Added escape sequences `\~`, `` \` ``.
+ * Added escape sequences `\~` and `` \` ``.
  * Github-styled fenced code blocks (<https://help.github.com/articles/github-flavored-markdown>).
+   No syntax highlighting is provided but the `data-language` attribute is set.
+ * Plain link recognizion.
 
 ## Installation
 
@@ -41,7 +42,6 @@ Requires SWI-Prolog 7.x.
 
  * Horisontal ruler ending a list item
  * Fenced code block ends a list item
- * Link recognition
 
 ## License
 

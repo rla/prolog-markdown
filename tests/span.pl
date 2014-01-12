@@ -109,4 +109,12 @@ test(strikethrough_in_strong):-
 test(escaped_strikethrough):-
     md_span_string("\\~~abc\\~~", [~, \['~abc'], ~, \[~]]).
 
+test(plain_link_http):-
+    md_span_string("abc http://google.com rest",
+        [\['abc '], a([href='http://google.com'], 'http://google.com'), \[' rest']]).
+
+test(plain_link_https):-
+    md_span_string("abc https://google.com rest",
+        [\['abc '], a([href='https://google.com'], 'https://google.com'), \[' rest']]).
+
 :- end_tests(md_span).
