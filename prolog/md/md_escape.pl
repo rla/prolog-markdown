@@ -53,3 +53,4 @@ md_escaped_code(0'+).
 md_escaped_code(0'-).
 md_escaped_code(0'.).
 md_escaped_code(0'!).
+md_escaped_code(0'~).

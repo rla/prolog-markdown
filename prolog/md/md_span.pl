@@ -36,7 +36,7 @@ md_span_string(String, Out):-
 % http://www.swi-prolog.org/pldoc/doc_for?object=html/1
 
 md_span_codes(Codes, Out):-
-    md_span_codes(Codes, [strong, em, code], Out).
+    md_span_codes(Codes, [strong, em, code, del], Out).
 
 md_span_codes(Codes, Allow, Out):-
     phrase(span(Spans, Allow), Codes), !,

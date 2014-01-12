@@ -97,4 +97,16 @@ test(link_in_strong):-
 test(strong_in_emphasis):-
     md_span_string("_**abc**_", [em([strong([\[abc]])])]).
 
+test(strikethrough):-
+    md_span_string("~~abc~~", [del([\[abc]])]).
+
+test(strong_in_strikethrough):-
+    md_span_string("~~**abc**~~", [del([strong([\[abc]])])]).
+
+test(strikethrough_in_strong):-
+    md_span_string("**~~abc~~**", [strong([del([\[abc]])])]).
+
+test(escaped_strikethrough):-
+    md_span_string("\\~~abc\\~~", [~, \['~abc'], ~, \[~]]).
+
 :- end_tests(md_span).
