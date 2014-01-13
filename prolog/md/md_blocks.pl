@@ -1,5 +1,5 @@
 :- module(md_blocks, [
-    md_blocks//1
+    md_blocks//1 % -Blocks
 ]).
 
 /** <module> Block-level parser for Markdown

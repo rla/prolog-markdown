@@ -1,5 +1,5 @@
 :- module(md_header, [
-    md_header//1
+    md_header//1 % -Header
 ]).
 
 /** <module> Markdown header parser.
@@ -12,7 +12,7 @@ Recognizes atx and setext-styled headers.
 :- use_module(md_line).
 :- use_module(md_trim).
 
-%% md_header(-Header)// is semidet.
+%! md_header(-Header)// is semidet.
 %
 % Recognizes either setext
 % or atx-styled headings.

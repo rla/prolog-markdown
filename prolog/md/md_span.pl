@@ -1,6 +1,6 @@
 :- module(md_span, [
-    md_span_codes/2,
-    md_span_string/2
+    md_span_codes/2, % +Codes, -HtmlTerms
+    md_span_string/2 % +String, -HtmlTerms
 ]).
 
 /** <module> Span-level Markdown parser
@@ -20,23 +20,23 @@ http://daringfireball.net/projects/markdown/syntax#span
 :- use_module(md_escape).
 :- use_module(md_line).
 
-%% md_span_string(+String, -Out) is det.
+%! md_span_string(+String, -HtmlTerms) is det.
 %
 % Same as md_span_codes/2 but uses a string
 % ans input.
 
-md_span_string(String, Out):-
+md_span_string(String, HtmlTerms):-
     string_codes(String, Codes),
-    md_span_codes(Codes, Out).
+    md_span_codes(Codes, HtmlTerms).
 
-%% md_span_codes(+Codes, -Out) is det.
+%! md_span_codes(+Codes, -HtmlTerms) is det.
 %
 % Turns the list of codes into a structure acceptable
 % by SWI-Prolog's html//1 predicate. More info:
 % http://www.swi-prolog.org/pldoc/doc_for?object=html/1
 
-md_span_codes(Codes, Out):-
-    md_span_codes(Codes, [strong, em, code, del], Out).
+md_span_codes(Codes, HtmlTerms):-
+    md_span_codes(Codes, [strong, em, code, del], HtmlTerms).
 
 md_span_codes(Codes, Allow, Out):-
     phrase(span(Spans, Allow), Codes), !,

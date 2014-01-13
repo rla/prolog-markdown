@@ -22,7 +22,7 @@ Contains line-based parsing primitives.
 
 :- use_module(library(dcg/basics)).
 
-%% merge_lines(+Lines, -Codes) is det.
+%! merge_lines(+Lines, -Codes) is det.
 %
 % Merges list of lines into
 % a flat code list.
@@ -35,7 +35,7 @@ merge_lines([Line|Lines], Codes):-
     merge_lines(Lines, Merged),
     append(Line, [0'\n|Merged], Codes).
 
-%% indent// is semidet.
+%! indent// is semidet.
 %
 % Recognizes normal indent which
 % is a tab or 4 spaces.
@@ -43,7 +43,7 @@ merge_lines([Line|Lines], Codes):-
 indent --> "\t".
 indent --> "    ".
 
-%% lookahead_non_empty_line(-Codes)// is semidet.
+%! lookahead_non_empty_line(-Codes)// is semidet.
 %
 % Looks head a non-empty line. The line might
 % end with a line end or the `eos`.
@@ -52,7 +52,7 @@ lookahead_non_empty_line(Codes), Codes -->
     inline_string(Codes), lookahead_ln_or_eos,
     { Codes \= [] }, !.
 
-%% non_empty_line(-Codes)// is semidet.
+%! non_empty_line(-Codes)// is semidet.
 %
 % Single non-empty line ending with newline
 % or end-of-stream.
@@ -61,7 +61,7 @@ non_empty_line(Codes) -->
     inline_string(Codes), ln_or_eos,
     { Codes \= [] }, !.
 
-%% discard_to_line_end// is det.
+%! discard_to_line_end// is det.
 %
 % Discards zero or more symbol
 % codes untill the first line
@@ -73,7 +73,7 @@ discard_to_line_end -->
 discard_to_line_end -->
     [_], discard_to_line_end.
 
-%% empty_lines// is det.
+%! empty_lines// is det.
 %
 % List of consequtive empty lines.
 % Consumes as many empty lines as
@@ -88,21 +88,21 @@ empty_lines -->
 
 empty_lines --> "".
 
-%% empty_line// is semidet.
+%! empty_line// is semidet.
 %
 % Recognizes a single empty line.
 
 empty_line -->
     whites, ln_or_eos.
 
-%% lookahead(?Code)// is semidet.
+%! lookahead(?Code)// is semidet.
 %
 % Looks ahead a single symbol code.
 
 lookahead(Code), [Code] -->
     [Code].
 
-%% string_limit(-Codes, +Limit)// is multidet.
+%! string_limit(-Codes, +Limit)// is multidet.
 %
 % Same as string//1 but with
 % a length limit.
@@ -118,7 +118,7 @@ string_limit([Code|Codes], Limit) -->
     { Next is Limit - 1 },
     string_limit(Codes, Next).
 
-%% inline_string(-Codes)// is multidet.
+%! inline_string(-Codes)// is multidet.
 %
 % Takes as few symbol codes as possible
 % up to line end.
@@ -132,9 +132,9 @@ inline_string([Code|Codes]) -->
     [Code],
     inline_string(Codes).
 
-%% lookahead_ln_or_eos// is semidet.
+%! lookahead_ln_or_eos// is semidet.
 %
-% Looks-ahead a line end or
+% Looks ahead a line end or
 % end-of-stream. Puts back `\n`
 % when a line end is recognized.
 
@@ -144,14 +144,14 @@ lookahead_ln_or_eos -->
 lookahead_ln_or_eos -->
     eos.
 
-%% lookahead_ln// is semidet.
+%! lookahead_ln// is semidet.
 %
-% Looks-ahead a line end. Puts
+% Looks ahead a line end. Puts
 % back `\n` when it is recognized.
 
 lookahead_ln, "\n" --> ln.
 
-%% ln_or_eos// is semidet.
+%! ln_or_eos// is semidet.
 %
 % Recognizes either a line end
 % or eos.
@@ -162,7 +162,7 @@ ln_or_eos -->
 ln_or_eos -->
     eos.
 
-%% ln// is semidet.
+%! ln// is semidet.
 %
 % Recognizes different line
 % endings.

@@ -13,7 +13,7 @@ from the `md_span` module for code clarity.
 :- use_module(md_links).
 :- use_module(md_line).
 
-%% md_span_link(-Link)// is det.
+%! md_span_link(-Link)// is det.
 %
 % Recognizes different types of
 % links from the stream of symbol codes.

@@ -17,7 +17,7 @@ the stream of symbol codes.
 
 :- thread_local(link/3).
 
-%% md_link(?Id, ?Url, ?Title) is det.
+%! md_link(?Id, ?Url, ?Title) is det.
 %
 % Retrieves recorded link from the last
 % invocation of md_links/2.
@@ -25,7 +25,7 @@ the stream of symbol codes.
 md_link(Id, Url, Title):-
     link(Id, Url, Title).
 
-% md_links(+CodesIn, -CodesOut) is det.
+%! md_links(+CodesIn, -CodesOut) is det.
 %
 % Same as md_links/3 but stores links
 % in threadlocal predicate which is cleared
@@ -39,7 +39,7 @@ md_links(CodesIn, CodesOut):-
 assert_link(link(Id, Url, Title)):-
     assertz(link(Id, Url, Title)).
 
-% md_links(+CodesIn, -CodesOut, -Links) is det.
+%! md_links(+CodesIn, -CodesOut, -Links) is det.
 %
 % Markdown reference link definition parser.
 % Removes link definitions from the symbol code list.

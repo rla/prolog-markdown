@@ -13,7 +13,7 @@ Separated into its own module for code clarity.
 :- use_module(md_line).
 :- use_module(md_hr).
 
-%% md_bullet_list_item(+Codes, -Mode)// is det.
+%! md_bullet_list_item(+Codes, -Mode)// is det.
 %
 % Recognizes a single bulleted list item.
 
@@ -26,7 +26,7 @@ md_bullet_list_item(Codes, Mode) -->
     ;   bullet_start(Indent, _), whites, !,
         list_item_unintented(Indent, Codes, Mode)).
 
-%% md_ordered_list_item(-Codes, -Mode)// is det.
+%! md_ordered_list_item(-Codes, -Mode)// is det.
 %
 % Recognizes a single ordered list item.
 
