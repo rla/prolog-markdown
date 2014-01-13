@@ -40,7 +40,19 @@ md_span_codes(Codes, HtmlTerms):-
 
 md_span_codes(Codes, Allow, Out):-
     phrase(span(Spans, Allow), Codes), !,
-    atoms(Spans, Out).
+    phrase(atomize(Out), Spans).
+
+% Optimized case for normal text.
+
+span([Code1,Code2|Spans], Allow) -->
+    [Code1,Code2],
+    {
+        code_type(Code1, alnum),
+        code_type(Code2, alnum),
+        Code1 \= 0'h,
+        Code2 \= 0't
+    }, !,
+    span(Spans, Allow).
 
 % Escape sequences.
 % More info:
@@ -62,10 +74,10 @@ span([Atom|Spans], Allow) -->
 span([\[Atom]|Spans], Allow) -->
     "&", string_limit(Codes, 10), ";",
     {
-        maplist(alnum, Codes), !,
+        maplist(alnum, Codes),
         append([0'&|Codes], [0';], Entity),
         atom_codes(Atom, Entity)
-    },
+    }, !,
     span(Spans, Allow).
 
 % Special characters & and <.
@@ -172,30 +184,23 @@ span([], _) -->
 % Atoms will appear as \[text] as they can contain
 % raw HTML which must not be escaped.
 
-atoms(In, Out):-
-    atoms(In, [], Out).
+atomize([]) -->
+    eos, !.
 
-atoms([], [], []):- !.
+atomize([\[Atom]|Tokens]) -->
+    [Num], { number(Num) }, !,
+    text_codes(Codes),
+    { atom_codes(Atom, [Num|Codes]) },
+    atomize(Tokens).
 
-atoms([], Acc, [\[Atom]]):-
-    reverse(Acc, Rev),
-    atom_codes(Atom, Rev).
+atomize([Token|Tokens]) -->
+    [Token], atomize(Tokens).
 
-atoms([Token|In], Acc, Out):-
-    number(Token), !,
-    atoms(In, [Token|Acc], Out).
+text_codes([Code|Codes]) -->
+    [Code], { number(Code) }, !,
+    text_codes(Codes).
 
-% Case for empty atom between span elements.
-
-atoms([Token|In], [], [Token|Out]):-
-    \+ number(Token), !,
-    atoms(In, [], Out).
-
-atoms([Token|In], Acc, [\[Atom],Token|Out]):-
-    \+ number(Token),
-    reverse(Acc, Rev),
-    atom_codes(Atom, Rev),
-    atoms(In, [], Out).
+text_codes([]) --> "".
 
 % Recognizes single symbol code of
 % type alnum.

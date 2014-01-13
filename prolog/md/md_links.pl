@@ -56,16 +56,21 @@ links_begin(Codes, [Link|Links]) -->
 links_begin(Codes, Links) -->
     links(Codes, Links).
 
-links([], []) --> eos, !.
+links([Code|Codes], Links) -->
+    [Code], { \+code_type(Code, end_of_line) }, !,
+    links(Codes, Links).
 
 links(Codes, [Link|Links]) -->
-    ln, link(Link), !, links(Codes, Links).
+    ln_full, link(Link), !, links(Codes, Links).
 
 links([0'\n|Codes], Links) -->
-    ln, !, links(Codes, Links).
+    ln_full, !, links(Codes, Links).
 
-links([Code|Codes], Links) -->
-    [Code], links(Codes, Links).
+links([], []) --> eos, !.
+
+ln_full --> "\r\n", !.
+ln_full --> "\n", !.
+ln_full --> "\r".
 
 % Recognizes a reference link definition.
 % Example: [foo]: http://example.com/ "Optional Title Here"
@@ -93,7 +98,7 @@ link_title(Title) -->
     link_title_same_line(Title), !.
 
 link_title(Title) -->
-    ln, whites, link_title_same_line(Title), !.
+    ln_full, whites, link_title_same_line(Title), !.
 
 link_title('') --> "".
 

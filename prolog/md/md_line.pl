@@ -51,14 +51,15 @@ non_empty_line([Code|Codes]) -->
     [Code], { Code \= 0'\n },
     non_empty_line_rest(Codes).
 
+non_empty_line_rest([Code|Codes]) -->
+    [Code], { Code \= 0'\n }, !,
+    non_empty_line_rest(Codes).
+
 non_empty_line_rest([]) -->
     "\n", !.
 
 non_empty_line_rest([]) -->
-    eos, !.
-
-non_empty_line_rest([Code|Codes]) -->
-    [Code], non_empty_line_rest(Codes).
+    "".
 
 %! discard_to_line_end// is det.
 %
@@ -156,16 +157,13 @@ lookahead_ln, "\n" --> ln.
 % or eos.
 
 ln_or_eos -->
-    ln, !.
+    "\n", !.
 
 ln_or_eos -->
     eos.
 
 %! ln// is semidet.
 %
-% Recognizes different line
-% endings.
+% Recognizes line ending.
 
-ln --> "\r\n", !.
-ln --> "\n", !.
-ln --> "\r".
+ln --> "\n".
