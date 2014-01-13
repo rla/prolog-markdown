@@ -15,26 +15,41 @@ Recognizes horizontal rulers.
 %
 % Recognizes an horizontal ruler.
 
-% XXX might be a bit slow implementation?
+md_hr -->
+    code_hr(0'*, 3, _), !.
 
 md_hr -->
-    non_empty_line(Line),
-    { hr(Line) }.
+    code_hr(0'-, 3, _).
 
 %! md_lookahead_hr// is semidet.
 %
 % Looks ahead an horizontal ruler.
 
-md_lookahead_hr -->
-    lookahead_non_empty_line(Line),
-    { hr(Line) }.
+md_lookahead_hr, Codes -->
+    code_hr(0'*, 3, Codes), !.
 
-% Checks that the line is
-% an horizontal ruler.
+md_lookahead_hr, Codes -->
+    code_hr(0'-, 3, Codes).
 
-hr(Line):-
-    exclude('='(0' ), Line, Clean),
-    length(Clean, Length),
-    Length >= 3,
-    (   maplist('='(0'*), Clean)
-    ;   maplist('='(0'-), Clean)).
+% Recognizes given number of codes
+% separated on a single line by 0
+% or more spaces or tabs.
+
+code_hr(_, 0, []) -->
+    eos, !.
+
+code_hr(_, 0, [0'\n]) -->
+    "\n", !.
+
+code_hr(Code, 0, [Code|Codes]) -->
+    [Code], !, code_hr(Code, 0, Codes).
+
+code_hr(Code, N, [0' |Codes]) -->
+    " ", !, code_hr(Code, N, Codes).
+
+code_hr(Code, N, [0'\t|Codes]) -->
+    "\t", !, code_hr(Code, N, Codes).
+
+code_hr(Code, N, [Code|Codes]) -->
+    [Code], !, { N1 is N - 1 },
+    code_hr(Code, N1, Codes).

@@ -18,36 +18,23 @@ Recognizes atx and setext-styled headers.
 % or atx-styled headings.
 
 md_header(Header) -->
-    setext_first_level(Header), !.
-
-md_header(Header) -->
-    setext_second_level(Header), !.
+    setext_header(Header), !.
 
 md_header(Header) -->
     atx_header(Header).
 
-% Recognizes setext-styled first
-% level heading. Output is a term
-% like h1(heading).
+% Recognizes setext-styled headings.
+% Output is a term like h1(heading).
 
-setext_first_level(Header) -->
+setext_header(Header) -->
     non_empty_line(Codes),
-    equals_line,
+    (   equals_line,
+        { Name = h1 }
+    ;   dashes_line,
+        { Name = h2 }),
     {
         atom_codes(Atom, Codes),
-        Header =.. [h1, Atom]
-    }.
-
-% Recognizes setext-styles second
-% level heading. Output is a term
-% like h2(heading).
-
-setext_second_level(Header) -->
-    non_empty_line(Codes),
-    dashes_line,
-    {
-        atom_codes(Atom, Codes),
-        Header =.. [h2, Atom]
+        Header =.. [Name, Atom]
     }.
 
 % Recognizes atx-styled heading.
@@ -97,19 +84,25 @@ atx_header_text([Code|Codes]) -->
 % Line filles with one or more dashes.
 
 dashes_line -->
-    codes_non_empty(0'-), !, ln_or_eos.
+    "-", dashes_line_rest.
 
-% Line filled with one or more equals signs.
+dashes_line_rest -->
+    eos, !.
+
+dashes_line_rest -->
+    "\n", !.
+
+dashes_line_rest -->
+    "-", dashes_line_rest.
 
 equals_line -->
-    codes_non_empty(0'=), !, ln_or_eos.
+    "=", equals_line_rest.
 
-% Non-empty consequtive list
-% of given symbol codes.
+equals_line_rest -->
+    eos, !.
 
-codes_non_empty(Code) -->
-    [Code],
-    codes_non_empty(Code).
+equals_line_rest -->
+    "\n", !.
 
-codes_non_empty(Code) -->
-    [Code].
+equals_line_rest -->
+    "=", equals_line_rest.

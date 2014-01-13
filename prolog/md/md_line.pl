@@ -2,7 +2,6 @@
     merge_lines/2,               % +Lines, -Codes
     indent//0,
     non_empty_line//1,           % -Codes
-    lookahead_non_empty_line//1, % -Codes
     discard_to_line_end//0,
     empty_lines//0,
     empty_line//0,
@@ -43,26 +42,20 @@ merge_lines([Line|Lines], Codes):-
 indent --> "\t".
 indent --> "    ".
 
-%! lookahead_non_empty_line(-Codes)// is semidet.
-%
-% Looks head a non-empty line. The line might
-% end with a line end or the `eos`.
-
-lookahead_non_empty_line(Codes), Codes -->
-    inline_string(Codes), lookahead_ln_or_eos,
-    { Codes \= [] }, !.
-
 %! non_empty_line(-Codes)// is semidet.
 %
 % Single non-empty line ending with newline
 % or end-of-stream.
 
 non_empty_line([Code|Codes]) -->
-    [Code], { Code \= 0'\n, Code \= 0'\r }, % FIXME optimize line end.
+    [Code], { Code \= 0'\n },
     non_empty_line_rest(Codes).
 
 non_empty_line_rest([]) -->
-    ln_or_eos, !.
+    "\n", !.
+
+non_empty_line_rest([]) -->
+    eos, !.
 
 non_empty_line_rest([Code|Codes]) -->
     [Code], non_empty_line_rest(Codes).
