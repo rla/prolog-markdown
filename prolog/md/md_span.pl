@@ -101,6 +101,14 @@ span([br([])|Spans], Allow) -->
 % Recognizes links and images.
 
 span([Link|Spans], Allow) -->
+    lookahead(Code),
+    {
+        % performance optimization
+        (   Code = 0'[
+        ;   Code = 0'!
+        ;   Code = 0'<
+        ;   Code = 0'h)
+    },
     md_span_link(Link), !,
     span(Spans, Allow).
 
