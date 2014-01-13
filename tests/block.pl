@@ -240,17 +240,17 @@ test(code_4):-
 % Simple horisontal ruler.
 
 test(horisontal_rule_1):-
-    md_parse_string("***", [hr]).
+    md_parse_string("***", [hr([])]).
 
 % Simple horisontal ruler, dashes.
 
 test(horisontal_rule_2):-
-    md_parse_string("---", [hr]).
+    md_parse_string("---", [hr([])]).
 
 % Simple horisontal ruler, spaces between stars.
 
 test(horisontal_rule_3):-
-    md_parse_string("* * *", [hr]).
+    md_parse_string("* * *", [hr([])]).
 
 % An HTML block.
 
@@ -268,12 +268,12 @@ test(fenced_code):-
     md_parse_string("```prolog\nabc\n```", [pre(code(['data-language'=prolog], abc))]).
 
 test(hr_after_list_1):-
-    md_parse_string("* abc\n* * *\nrest", [ul([li([\[abc]])]), hr, p([\[rest]])]).
+    md_parse_string("* abc\n* * *\nrest", [ul([li([\[abc]])]), hr([]), p([\[rest]])]).
 
 % Horizontal ruler deeply nested.
 % XXX hr is not placed inside list item.
 
 test(hr_after_list_2):-
-    md_parse_string("* abc\n           * * *", [ul([li([\[abc]])]), hr]).
+    md_parse_string("* abc\n           * * *", [ul([li([\[abc]])]), hr([])]).
 
 :- end_tests(md_block).

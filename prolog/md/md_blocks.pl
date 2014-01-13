@@ -95,7 +95,7 @@ acc_block(Acc, p(Span)):-
 block(_, Block) -->
     md_header(Block), !.
 
-block(top, hr) -->
+block(top, hr([])) -->
     md_hr, !.
 
 block(_, Block) -->
