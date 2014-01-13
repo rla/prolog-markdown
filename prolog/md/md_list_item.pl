@@ -147,18 +147,6 @@ list_item_end(_, normal) -->
 lookahead_no_indent -->
     lookahead_no_white.
 
-% FIXME drop cases below?
-
-/*
-lookahead_no_indent, [0' ] -->
-    " ", lookahead_no_white.
-
-lookahead_no_indent, [0' ,0' ] -->
-    "  ", lookahead_no_white.
-
-lookahead_no_indent, [0' ,0' ,0' ] -->
-    "   ", lookahead_no_white.*/
-
 lookahead_no_white, [Code] -->
     [Code], { \+ code_type(Code, white) }.
 
