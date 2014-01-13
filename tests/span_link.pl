@@ -30,7 +30,7 @@ test(span_link_3):-
 % Tests a reference link (undefined).
 
 test(span_link_4):-
-    retractall(md_links:link(_, _, _)),
+    retractall(md_links:link_definition(_, _, _)),
     (   md_span_link_string("[Google][g] def", _, _)
     ->  fail
     ;   true).
@@ -38,32 +38,32 @@ test(span_link_4):-
 % Tests a reference link.
 
 test(span_link_5):-
-    retractall(md_links:link(_, _, _)),
-    assertz(md_links:link(g, 'http://google.com', 'Title')),
+    retractall(md_links:link_definition(_, _, _)),
+    assertz(md_links:link_definition(g, 'http://google.com', 'Title')),
     md_span_link_string("[Google][g] def",
         a([href='http://google.com', title='Title'], 'Google'), " def").
 
 % Tests a reference link. Uppercase identifier.
 
 test(span_link_6):-
-    retractall(md_links:link(_, _, _)),
-    assertz(md_links:link(g, 'http://google.com', 'Title')),
+    retractall(md_links:link_definition(_, _, _)),
+    assertz(md_links:link_definition(g, 'http://google.com', 'Title')),
     md_span_link_string("[Google][G] def",
         a([href='http://google.com', title='Title'], 'Google'), " def").
 
 % Tests a reference link. Identifier from label.
 
 test(span_link_7):-
-    retractall(md_links:link(_, _, _)),
-    assertz(md_links:link(google, 'http://google.com', 'Title')),
+    retractall(md_links:link_definition(_, _, _)),
+    assertz(md_links:link_definition(google, 'http://google.com', 'Title')),
     md_span_link_string("[Google][] def",
         a([href='http://google.com', title='Title'], 'Google'), " def").
 
 % Tests a reference link. No title.
 
 test(span_link_8):-
-    retractall(md_links:link(_, _, _)),
-    assertz(md_links:link(g, 'http://google.com', '')),
+    retractall(md_links:link_definition(_, _, _)),
+    assertz(md_links:link_definition(g, 'http://google.com', '')),
     md_span_link_string("[Google][g] def",
         a([href='http://google.com'], 'Google'), " def").
 
@@ -88,24 +88,24 @@ test(span_link_11):-
 % Tests a reference-linked image.
 
 test(span_link_12):-
-    retractall(md_links:link(_, _, _)),
-    assertz(md_links:link(i, 'http://example.com/photo.jpg', 'Title')),
+    retractall(md_links:link_definition(_, _, _)),
+    assertz(md_links:link_definition(i, 'http://example.com/photo.jpg', 'Title')),
     md_span_link_string("![Photo][i] def",
         img([src='http://example.com/photo.jpg', alt='Photo', title='Title']), " def").
 
 % Tests a reference link. Identifier from label.
 
 test(span_link_13):-
-    retractall(md_links:link(_, _, _)),
-    assertz(md_links:link(photo, 'http://example.com/photo.jpg', 'Title')),
+    retractall(md_links:link_definition(_, _, _)),
+    assertz(md_links:link_definition(photo, 'http://example.com/photo.jpg', 'Title')),
     md_span_link_string("![Photo][] def",
         img([src='http://example.com/photo.jpg', alt='Photo', title='Title']), " def").
 
 % Tests a reference-linked image. No title.
 
 test(span_link_14):-
-    retractall(md_links:link(_, _, _)),
-    assertz(md_links:link(i, 'http://example.com/photo.jpg', '')),
+    retractall(md_links:link_definition(_, _, _)),
+    assertz(md_links:link_definition(i, 'http://example.com/photo.jpg', '')),
     md_span_link_string("![Photo][i] def",
         img([src='http://example.com/photo.jpg', alt='Photo']), " def").
 

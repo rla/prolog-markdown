@@ -13,9 +13,9 @@ the stream of symbol codes.
 :- use_module(library(dcg/basics)).
 :- use_module(md_line).
 
-% link(Id, Url, Title).
+% link_definition(Id, Url, Title).
 
-:- thread_local(link/3).
+:- thread_local(link_definition/3).
 
 %! md_link(?Id, ?Url, ?Title) is det.
 %
@@ -23,7 +23,7 @@ the stream of symbol codes.
 % invocation of md_links/2.
 
 md_link(Id, Url, Title):-
-    link(Id, Url, Title).
+    link_definition(Id, Url, Title).
 
 %! md_links(+CodesIn, -CodesOut) is det.
 %
@@ -32,12 +32,12 @@ md_link(Id, Url, Title):-
 % on each invocation of this predicate.
 
 md_links(CodesIn, CodesOut):-
-    retractall(link(_, _, _)),
+    retractall(link_definition(_, _, _)),
     md_links(CodesIn, CodesOut, Links),
     maplist(assert_link, Links).
 
 assert_link(link(Id, Url, Title)):-
-    assertz(link(Id, Url, Title)).
+    assertz(link_definition(Id, Url, Title)).
 
 %! md_links(+CodesIn, -CodesOut, -Links) is det.
 %
