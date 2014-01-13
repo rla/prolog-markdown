@@ -38,10 +38,6 @@ Requires SWI-Prolog 7.x.
 
     pack_install('http://packs.rlaanemets.com/markdown/markdown-*.tgz')
 
-## TODO
-
- * Fenced code block ends a list item
-
 ## License
 
 The MIT License. See the LICENSE file.

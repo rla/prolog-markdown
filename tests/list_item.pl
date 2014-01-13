@@ -114,4 +114,14 @@ test(list_item_18):-
 test(list_item_19):-
     md_ordered_list_item_string(" 1. abc\ndef\n2. ghi", "abc\ndef", normal, "2. ghi").
 
+% Sublist indented with 1 space.
+
+test(list_item_20):-
+    md_bullet_list_item_string("* abc\n * def\n* ghi", "abc\n* def", normal, "* ghi").
+
+% Multiple sublists indented with 1 space.
+
+test(list_item_21):-
+    md_bullet_list_item_string("* abc\n * def\n  * ghi\n* rest", "abc\n* def\n * ghi", normal, "* rest").
+
 :- end_tests(md_list_item).
