@@ -97,4 +97,9 @@ test(link_15):-
     md_links_strings("    [id]: http://example.com 'Title'",
         "    [id]: http://example.com 'Title'", []).
 
+% Line ends replaced with canonical line ends.
+
+test(link_16):-
+    md_links_strings("\r\n\r", "\n\n", []).
+
 :- end_tests(md_links).

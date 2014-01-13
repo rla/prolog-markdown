@@ -7,7 +7,8 @@
 /** <module> Markdown reference link parser
 
 Parses and removes reference links from
-the stream of symbol codes.
+the stream of symbol codes. Replaces
+line ends with canonical line ends.
 */
 
 :- use_module(library(dcg/basics)).
@@ -59,6 +60,9 @@ links([], []) --> eos, !.
 
 links(Codes, [Link|Links]) -->
     ln, link(Link), !, links(Codes, Links).
+
+links([0'\n|Codes], Links) -->
+    ln, !, links(Codes, Links).
 
 links([Code|Codes], Links) -->
     [Code], links(Codes, Links).

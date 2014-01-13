@@ -57,9 +57,15 @@ lookahead_non_empty_line(Codes), Codes -->
 % Single non-empty line ending with newline
 % or end-of-stream.
 
-non_empty_line(Codes) -->
-    inline_string(Codes), ln_or_eos,
-    { Codes \= [] }, !.
+non_empty_line([Code|Codes]) -->
+    [Code], { Code \= 0'\n, Code \= 0'\r }, % FIXME optimize line end.
+    non_empty_line_rest(Codes).
+
+non_empty_line_rest([]) -->
+    ln_or_eos, !.
+
+non_empty_line_rest([Code|Codes]) -->
+    [Code], non_empty_line_rest(Codes).
 
 %! discard_to_line_end// is det.
 %
