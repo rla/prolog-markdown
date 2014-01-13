@@ -95,6 +95,9 @@ acc_block(Acc, p(Span)):-
 block(_, Block) -->
     md_header(Block), !.
 
+block(_, Block) -->
+    code(Block), !.
+
 block(top, hr([])) -->
     md_hr, !.
 
@@ -106,9 +109,6 @@ block(top, Block) -->
 
 block(_, Block) -->
     html(Block), !.
-
-block(_, Block) -->
-    code(Block), !.
 
 block(_, Block) -->
     fenced_code(Block).

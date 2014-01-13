@@ -120,18 +120,26 @@ span([\[Atom]|Spans], Allow) -->
 
 span([Code, 0'_, 0'_|Spans], Allow) -->
     [Code], "__",
-    { \+ code_type(Code, space) }, !,
+    { code_type(Code, alnum) }, !,
     span(Spans, Allow).
 
 span([Code, 0'_|Spans], Allow) -->
     [Code], "_",
-    { Code \= 0'_, \+ code_type(Code, space) }, !,
+    { code_type(Code, alnum) }, !,
     span(Spans, Allow).
 
 % Recognizes text stylings like
 % strong, emphasis and inline code.
 
 span([Span|Spans], Allow) -->
+    lookahead(Code),
+    {
+        % performance optimization
+        (   Code = 0'`
+        ;   Code = 0'_
+        ;   Code = 0'*
+        ;   Code = 0'~)
+    },
     md_span_decorate(Dec, Allow), !,
     {
         Dec =.. [Name, Codes],
