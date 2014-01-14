@@ -11,8 +11,8 @@ package: test
 doc:
 	swipl -q -t 'doc_save(prolog/md, [doc_root(doc),format(html),title(markdown),if(true),recursive(true)])'
 
-upload: doc # FIXME needs package too
-	#scp $(packfile) $(remote)/$(packfile)
+upload: doc
+	scp $(packfile) $(remote)/$(packfile)
 	rsync -avz -e ssh doc $(remote)
 
 .PHONY: test package doc upload
