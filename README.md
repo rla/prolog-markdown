@@ -32,6 +32,11 @@ Convert into an HTML atom:
    No syntax highlighting is provided but the `data-language` attribute is set.
  * Plain link recognizion.
 
+## Performance
+
+Example [document](http://daringfireball.net/projects/markdown/syntax.text) (about 800 lines) is parsed
+in 80ms on 2.4GHz Q6600.
+
 ## Installation
 
 Requires SWI-Prolog 7.x.
