@@ -11,7 +11,7 @@ package: test
 doc:
 	swipl -q -t 'doc_save(prolog/md, [doc_root(doc),format(html),title(markdown),if(true),recursive(true)])'
 
-upload: doc
+upload: doc package
 	scp $(packfile) $(remote)/$(packfile)
 	rsync -avz -e ssh doc $(remote)
 
