@@ -45,6 +45,10 @@ Requires SWI-Prolog 7.x.
 
     pack_install('http://packs.rlaanemets.com/markdown/markdown-*.tgz')
 
+## API documentation
+
+See <http://packs.rlaanemets.com/markdown/doc/md_parse.html> for the top-level module documentation.
+
 ## Bug reports/feature requests
 
 Please send bug reports/feature request through the GitHub
