@@ -19,8 +19,8 @@ Convert into an HTML string:
 
     :- use_module(library(md/md_parse)).
 
-    ?- md_html_string("# Hello #", Blocks).
-    Blocks = "<h1>Hello</h1>".
+    ?- md_html_string("# Hello #", Html).
+    Html = "<h1>Hello</h1>".
 
 ## Deviations from the Gruber's Markdown
 
