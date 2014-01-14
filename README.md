@@ -12,13 +12,15 @@ Parse into a structure usable by
 
     :- use_module(library(md/md_parse)).
 
-    md_parse("# Hello #", Blocks).
+    ?- md_parse_string("# Hello #", Blocks).
+    Blocks = [h1("Hello")].
 
-Convert into an HTML atom:
+Convert into an HTML string:
 
     :- use_module(library(md/md_parse)).
 
-    md_html("# Hello #", Html).
+    ?- md_html_string("# Hello #", Blocks).
+    Blocks = "<h1>Hello</h1>".
 
 ## Deviations from the Gruber's Markdown
 
@@ -42,6 +44,11 @@ in 80ms on 2.4GHz Q6600.
 Requires SWI-Prolog 7.x.
 
     pack_install('http://packs.rlaanemets.com/markdown/markdown-*.tgz')
+
+## Bug reports/feature requests
+
+Please send bug reports/feature request through the GitHub
+project [page](https://github.com/rla/prolog-markdown).
 
 ## License
 
