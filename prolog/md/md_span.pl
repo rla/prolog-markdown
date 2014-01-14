@@ -127,11 +127,11 @@ span([Link|Spans], Allow) -->
 % Recognizes <script ... </script>.
 % Protects script contents from being processed as Markdown.
 
-span([\[Atom]|Spans], Allow) -->
+span([\[String]|Spans], Allow) -->
     "<script", string(Codes), "</script>", !,
     {
-        atom_codes(Content, Codes),
-        atomic_list_concat(['<script', Content, '</script>'], Atom)
+        string_codes(Content, Codes),
+        atomics_to_string(['<script', Content, '</script>'], String)
     },
     span(Spans, Allow).
 
@@ -164,7 +164,7 @@ span([Span|Spans], Allow) -->
     {
         Dec =.. [Name, Codes],
         (   Name = code
-        ->  atom_codes(Atom, Codes),
+        ->  string_codes(Atom, Codes),
             Span =.. [Name, Atom]
         ;   select(Name, Allow, AllowNest),
             md_span_codes(Codes, AllowNest, Nested),
@@ -190,7 +190,7 @@ atomize([]) -->
 atomize([\[Atom]|Tokens]) -->
     [Num], { number(Num) }, !,
     text_codes(Codes),
-    { atom_codes(Atom, [Num|Codes]) },
+    { string_codes(Atom, [Num|Codes]) },
     atomize(Tokens).
 
 atomize([Token|Tokens]) -->
@@ -207,9 +207,3 @@ text_codes([]) --> "".
 
 alnum(Code):-
     code_type(Code, alnum).
-
-% Turns a list of codes into an HTML term
-% than can contain embedded HTML.
-
-span_atom(Codes, \[Atom]):-
-    atom_codes(Atom, Codes).

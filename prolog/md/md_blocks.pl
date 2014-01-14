@@ -113,9 +113,9 @@ block(_, Block) -->
 block(_, Block) -->
     fenced_code(Block).
 
-code(pre(code(Atom))) -->
+code(pre(code(String))) -->
     indented_lines(Codes), !,
-    { atom_codes(Atom, Codes) }.
+    { string_codes(String, Codes) }.
 
 % Recognizes fenced code blocks.
 % The language is put into the
@@ -129,7 +129,7 @@ fenced_code(Block) -->
     {
         trim(LangCodes, Trimmed),
         atom_codes(Lang, Trimmed),
-        atom_codes(Code, Codes),
+        string_codes(Code, Codes),
         (   Lang = ''
         ->  Block = pre(code(Code))
         ;   Block = pre(code(['data-language'=Lang], Code)))
@@ -188,10 +188,10 @@ indented_line(Line) -->
 % Gives term that write_html's html//1
 % does not escape.
 
-html(\[Atom]) -->
+html(\[String]) -->
     [0'<, Code], { code_type(Code, alpha) }, !,
     non_empty_lines(Html),
-    { atom_codes(Atom, [0'<,Code|Html]) }.
+    { string_codes(String, [0'<,Code|Html]) }.
 
 % Recognizes either ordered list
 % or bulleted list.

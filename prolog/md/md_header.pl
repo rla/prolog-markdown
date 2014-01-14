@@ -24,7 +24,7 @@ md_header(Header) -->
     atx_header(Header).
 
 % Recognizes setext-styled headings.
-% Output is a term like h1(heading).
+% Output is a term like h1("heading").
 
 setext_header(Header) -->
     non_empty_line(Codes),
@@ -33,8 +33,8 @@ setext_header(Header) -->
     ;   dashes_line,
         { Name = h2 }),
     {
-        atom_codes(Atom, Codes),
-        Header =.. [Name, Atom]
+        string_codes(Title, Codes),
+        Header =.. [Name, Title]
     }.
 
 % Recognizes atx-styled heading.
@@ -46,9 +46,9 @@ atx_header(Header) -->
     discard_to_line_end,
     {
         trim(Codes, Trimmed),
-        atom_codes(Atom, Trimmed),
+        string_codes(Title, Trimmed),
         atomic_concat(h, Level, Name),
-        Header =.. [Name,Atom]
+        Header =.. [Name,Title]
     }.
 
 % Recognizes atx-styled header
