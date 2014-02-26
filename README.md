@@ -49,6 +49,11 @@ Requires SWI-Prolog 7.x.
 
 See <http://packs.rlaanemets.com/markdown/doc/md_parse.html> for the top-level module documentation.
 
+## Changelog
+
+ * 2014-02-26 version 0.0.2. Fixed HTTPS link in angled brackets. Trimmed bottom of code block.
+ * 2014-01-14 version 0.0.1
+
 ## Bug reports/feature requests
 
 Please send bug reports/feature request through the GitHub
