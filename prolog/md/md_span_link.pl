@@ -62,13 +62,14 @@ http_prefix('http://') -->
 http_prefix('https://') -->
     "https://".
 
-% Recognizes inline automatic http <link>.
+% Recognizes inline automatic http(s) <link>.
 
 angular_link(Link) -->
-    "<http", inline_string(Codes), ">",
+    "<", http_prefix(Prefix),
+    inline_string(Codes), ">",
     {
         atom_codes(Atom, Codes),
-        atom_concat(http, Atom, Url),
+        atom_concat(Prefix, Atom, Url),
         link(Url, '', Url, Link)
     }.
 

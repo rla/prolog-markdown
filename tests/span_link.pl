@@ -115,4 +115,10 @@ test(span_link_15):-
     md_span_link_string("[abc](http://example.com 'Title') def",
         a([href='http://example.com', title='Title'], abc), " def").
 
+% Tests an angular bracket link for HTTPS.
+
+test(span_link_16):-
+    md_span_link_string("<https://example.com> def",
+        a([href='https://example.com'], 'https://example.com'), " def").
+
 :- end_tests(md_span_links).
