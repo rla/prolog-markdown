@@ -115,7 +115,10 @@ block(_, Block) -->
 
 code(pre(code(String))) -->
     indented_lines(Codes), !,
-    { string_codes(String, Codes) }.
+    {
+        trim_right(Codes, Trimmed),
+        string_codes(String, Trimmed)
+    }.
 
 % Recognizes fenced code blocks.
 % The language is put into the

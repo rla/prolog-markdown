@@ -68,7 +68,7 @@ test(heading_11):-
 % With empty line.
 
 test(heading_12):-
-    md_parse_string("\ta+b\n\nabc\n===", [pre(code("a+b\n")), h1("abc")]).
+    md_parse_string("\ta+b\n\nabc\n===", [pre(code("a+b")), h1("abc")]).
 
 % Setext-styled first-level heading following a code block.
 % Without empty line.
