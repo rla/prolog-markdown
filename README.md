@@ -5,6 +5,8 @@ output tree is for direct use by [html/1](http://www.swi-prolog.org/pldoc/doc_fo
 The specification for the parser was taken from
 <http://daringfireball.net/projects/markdown/syntax> (Gruber's Markdown).
 
+[![Build Status](https://travis-ci.org/rla/prolog-markdown.svg)](https://travis-ci.org/rla/prolog-markdown)
+
 ## Example usage
 
 Parse into a structure usable by
