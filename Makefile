@@ -1,6 +1,6 @@
 version:=$(shell swipl -q -s pack -g 'version(V),writeln(V)' -t halt)
 packfile=markdown-$(version).tgz
-remote=packs@packs.rlaanemets.com:/usr/share/nginx/packs.rlaanemets.com/markdown
+remote=sites@rlaanemets.com:/sites/packs.rlaanemets.com/public/markdown
 
 test:
 	swipl -s tests/tests.pl -g run_tests,halt -t 'halt(1)'

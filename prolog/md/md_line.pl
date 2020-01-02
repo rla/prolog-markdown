@@ -102,7 +102,7 @@ empty_line -->
 lookahead(Code), [Code] -->
     [Code].
 
-%! string_limit(-Codes, +Limit)// is multidet.
+%! string_limit(-Codes, +Limit)// is multi.
 %
 % Same as string//1 but with
 % a length limit.
@@ -118,7 +118,7 @@ string_limit([Code|Codes], Limit) -->
     { Next is Limit - 1 },
     string_limit(Codes, Next).
 
-%! inline_string(-Codes)// is multidet.
+%! inline_string(-Codes)// is multi.
 %
 % Takes as few symbol codes as possible
 % up to line end.

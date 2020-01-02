@@ -53,6 +53,7 @@ See <http://packs.rlaanemets.com/markdown/doc/md_parse.html> for the top-level m
 
 ## Changelog
 
+ * 2020-01-02 version 0.0.3. Fixed mode declaration in documentation.
  * 2014-02-26 version 0.0.2. Fixed HTTPS link in angled brackets. Trimmed bottom of code block.
  * 2014-01-14 version 0.0.1
 
