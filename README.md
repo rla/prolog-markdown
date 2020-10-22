@@ -1,7 +1,7 @@
 # Prolog-markdown
 
 Markdown parser implemented in Prolog. Compatible with [SWI-Prolog](http://www.swi-prolog.org/) as the
-output tree is for direct use by [html/1](http://www.swi-prolog.org/pldoc/doc_for?object=html/1).
+output tree is for direct use by [html//1](https://www.swi-prolog.org/pldoc/man?predicate=html//1).
 The specification for the parser was taken from
 <http://daringfireball.net/projects/markdown/syntax> (Gruber's Markdown).
 
@@ -10,7 +10,7 @@ The specification for the parser was taken from
 ## Example usage
 
 Parse into a structure usable by
-[html/1](http://www.swi-prolog.org/pldoc/doc_for?object=html/1).
+[html//1](https://www.swi-prolog.org/pldoc/man?predicate=html//1).
 
     :- use_module(library(md/md_parse)).
 
